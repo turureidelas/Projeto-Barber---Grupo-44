@@ -1,0 +1,131 @@
+# CLAUDE.md — Na Régua (Painel Web)
+
+Guia de referência para todas as sessões. Leia antes de qualquer alteração.
+
+## Produto
+
+**Na Régua** é um sistema de agendamento para barbearias pequenas e médias (1 a 8 cadeiras, incluindo barbeiros autônomos que alugam cadeira). Projeto integrador — Tecnologia em Análise e Desenvolvimento de Sistemas (SENAC).
+
+- Problema: agenda de papel/WhatsApp → horários sobrepostos, faltas sem aviso, interrupções e nenhum indicador de gestão.
+- Produto completo: app mobile do cliente (fora deste repo) + **painel web responsivo para profissional e gestor (ESTE repo)**. Ambos consumirão a mesma API.
+- **O backend ainda não existe.** O painel roda sobre repositórios in-memory (persistidos em `localStorage`) atrás de portas; depois trocamos por HTTP sem mexer em regra nem em tela.
+
+### Perfis (RBAC)
+
+| Perfil (código)                 | Pode                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gestor / Proprietário (`OWNER`) | Tudo: agenda de todos, serviços, profissionais, escalas, clientes, relatórios, configurações, política de cancelamento                                       |
+| Profissional (`PROFESSIONAL`)   | Própria agenda, bloquear/liberar horários pontuais, registrar atendimento, ver a própria produtividade e comissão. **Não** edita a própria escala            |
+| Recepcionista (`RECEPTIONIST`)  | Agenda de todos, confirmar/remarcar/cancelar, registrar comparecimento e pagamento, cadastro de clientes. **Sem** relatórios financeiros e sem configurações |
+
+### Persona — Ricardo Almeida (34)
+
+Dono da "Barbearia Nova Era" (3 cadeiras, 2 funcionários). Consulta a agenda no celular entre atendimentos, às vezes com a mão molhada e em ambiente barulhento. Familiaridade com tecnologia intermediária para baixo: abandona o que parece burocrático. Quer saber faturamento, ocupação, faltas e comissão sem interpretar gráficos complexos.
+
+## Regras de UX (obrigatórias)
+
+- A agenda do dia (home) mostra o essencial em segundos: **próximo cliente**, horários do dia, ações rápidas.
+- Alvos de toque **≥ 44×44px**, contraste alto, pouca informação por tela, ações principais com 1 toque.
+- pt-BR simples, sem jargão: "Cliente faltou" (não "No-show"), "Bloquear horário" (não "Criar indisponibilidade").
+- **Mobile-first** na agenda; tela larga aproveitada em cadastros e relatórios.
+- Relatórios: cartões com números grandes + no máximo barras/linhas simples (feitos à mão com SVG + Tailwind, **sem lib de gráfico**).
+- Acessibilidade: HTML semântico, `label` em todo input, foco visível, navegação por teclado, `aria-*` quando necessário.
+- Toda tela tem estados de **loading, vazio e erro**.
+- Remarcar/agendar mostra **apenas horários válidos** (calculados pelo motor), em vez de deixar errar.
+
+## Regras de negócio
+
+### Motor de disponibilidade (coração do sistema — `domain/services`)
+
+- **Nunca** sobrepor agendamentos ativos do mesmo profissional.
+- Horário disponível ⇔ dentro da escala do profissional **E** fora de intervalos/bloqueios **E** `[início, início + duração do serviço/combo)` não colide com agendamento ativo.
+- Intervalos são semiabertos `[start, end)`: terminar 10:00 e começar 10:00 **não** colide.
+- Agendamentos ativos: `SCHEDULED`, `CONFIRMED`, `IN_SERVICE`. Cancelar ou remarcar libera o horário anterior imediatamente.
+- Grade de horários de **15 em 15 minutos**.
+- Lógica pura (sem React, sem I/O, sem `new Date()` — usa `Clock` injetado), com cobertura de testes ~100%.
+
+### Status do agendamento
+
+`SCHEDULED` (Agendado) → `CONFIRMED` (Confirmado) → `IN_SERVICE` (Em atendimento, ao marcar "compareceu") → `COMPLETED` (Concluído, gera `ServiceRecord` com valor e forma de pagamento).
+Saídas: `CANCELLED` (Cancelado), `NO_SHOW` (Cliente faltou). Transições validadas na própria entidade.
+
+### Políticas
+
+- **Cancelamento:** antecedência mínima (horas) configurável. Vale para cancelamento **feito pelo cliente**. Gestor/recepcionista podem cancelar fora do prazo, mas a UI avisa e exige motivo.
+- **Falta:** tolerância configurável (padrão 15 min após o início) antes de permitir "Cliente faltou". Histórico do cliente mostra o número de faltas.
+- **Comissão:** percentual por profissional, calculado sobre o **valor efetivamente pago**. Autônomo que aluga cadeira também é modelado só por % na v1.
+- **Ocupação:** minutos agendados (exceto cancelados) ÷ (minutos de escala − bloqueios).
+- Formas de pagamento: dinheiro, Pix, débito, crédito.
+
+### Entidades (código em inglês)
+
+`Barbershop`, `User` (role `OWNER` | `PROFESSIONAL` | `RECEPTIONIST`), `Professional` (foto, especialidade, % comissão), `WorkSchedule` (dias, início/fim, intervalos), `Service` (`kind: SINGLE | COMBO`; combo referencia serviços e tem duração/preço próprios), `Client` (com consentimento LGPD), `Appointment`, `TimeBlock`, `ServiceRecord` (atendimento: valor pago + forma de pagamento), `CancellationPolicy`.
+Value objects: `Money` (centavos, inteiro), `Duration`, `TimeRange`, `Phone`, `Email`.
+Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já preparados para várias).
+
+### LGPD
+
+Coletar só o necessário; mascarar telefone/e-mail em listagens; **nenhum dado pessoal em `console.*` nem em URL** (use IDs); registro de consentimento do cliente (data, versão do termo, canal).
+
+## Stack
+
+React 19 + TypeScript (strict) + Vite · Tailwind CSS v4 (`@tailwindcss/vite`) · React Router (modo declarativo) · TanStack Query (estado de servidor) + hooks do React (estado local, sem Redux) · React Hook Form + Zod (`@hookform/resolvers`) · date-fns + `@date-fns/tz` (pt-BR, fuso `America/Sao_Paulo`) · Vitest + Testing Library + jsdom · ESLint + Prettier · `lucide-react`.
+Componentes de UI próprios em `presentation/components/ui`. **Nenhuma dependência nova sem perguntar ao usuário.**
+
+## Arquitetura (Clean Architecture)
+
+Dependências apontam **para dentro**. Garantido por `no-restricted-imports` no `eslint.config.js`.
+
+```
+src/
+├── domain/          # entidades, value objects, erros, serviços de domínio (puro)
+├── application/     # use-cases/, ports/ (interfaces), dto/ — só importa domain
+├── infrastructure/  # repositories/in-memory, repositories/http, http/, auth/ — implementa ports
+├── presentation/    # app/, pages/, components/(ui|feature), hooks/, i18n/, styles/
+├── main/            # composition root: monta implementações e injeta via Context; config/env
+└── shared/          # utilitários sem regra de negócio; não importa nenhuma camada
+```
+
+| Camada           | Pode importar                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `domain`         | `shared`, `date-fns`, `@date-fns/tz`                                                                           |
+| `application`    | `domain`, `shared`                                                                                             |
+| `infrastructure` | `application`, `domain`, `shared`                                                                              |
+| `presentation`   | `application` (casos de uso, DTOs), `domain` (tipos/erros para exibição), `shared`. **Nunca** `infrastructure` |
+| `main`           | tudo                                                                                                           |
+| `shared`         | nada do projeto                                                                                                |
+
+Aliases: `@domain`, `@application`, `@infrastructure`, `@presentation`, `@main`, `@shared` (use-os entre camadas; relativo dentro da mesma camada).
+
+## Convenções
+
+- Código, nomes de arquivos e identificadores em **inglês**; textos de UI em **pt-BR** centralizados em `presentation/i18n/pt-BR.ts`.
+- Sem `any`; sem `enum` TS (use `as const` + union); funções pequenas; SOLID.
+- Sem lógica de negócio em componente — componente chama hook → hook chama caso de uso.
+- Dinheiro sempre em centavos (inteiro). Datas sempre com fuso explícito (`America/Sao_Paulo`).
+- Erros de domínio tipados (ex.: `ScheduleConflictError`) → mapeados para mensagem amigável na UI.
+- Testes ao lado do código (`*.test.ts(x)`). Domínio e casos de uso: unitários. Componentes críticos: Testing Library.
+- Commits pequenos, Conventional Commits (`feat:`, `fix:`, `test:`, `chore:`, `docs:`, `refactor:`).
+- Env via `import.meta.env` (somente em `main/config/env.ts`); ver `.env.example`.
+- Mock (`VITE_USE_MOCKS=true`) inclui botão "Resetar dados de demonstração" e um simulador de ações do cliente (cancelar/remarcar) para demonstrar notificações.
+
+## Comandos
+
+```bash
+npm run dev          # servidor de desenvolvimento
+npm run build        # typecheck + build de produção
+npm run typecheck    # tsc sem emitir
+npm run lint         # ESLint
+npm run format       # Prettier (escreve)
+npm run test         # Vitest (uma execução)
+npm run test:watch   # Vitest em watch
+npm run coverage     # cobertura
+```
+
+## Fluxo de trabalho
+
+Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `test` verdes → commit → resumo (o que foi feito, como testar no navegador, próximo passo) → **esperar o ok do usuário**. Decisão ambígua: escolher a opção mais simples que respeite a arquitetura e avisar em uma linha.
+
+### Fases
+
+0. Setup ✅ · 1. Domínio · 2. Aplicação + infra mock · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
