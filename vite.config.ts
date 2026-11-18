@@ -16,7 +16,16 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/**/*.d.ts', 'src/main/index.tsx'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.d.ts',
+        'src/**/testing/**',
+        'src/main/index.tsx',
+      ],
+      thresholds: {
+        // The domain (availability engine) is the heart of the system.
+        'src/domain/**': { statements: 100, branches: 100, functions: 100, lines: 100 },
+      },
     },
   },
 });

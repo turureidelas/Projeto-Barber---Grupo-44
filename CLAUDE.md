@@ -42,25 +42,39 @@ Dono da "Barbearia Nova Era" (3 cadeiras, 2 funcionários). Consulta a agenda no
 - Intervalos são semiabertos `[start, end)`: terminar 10:00 e começar 10:00 **não** colide.
 - Agendamentos ativos: `SCHEDULED`, `CONFIRMED`, `IN_SERVICE`. Cancelar ou remarcar libera o horário anterior imediatamente.
 - Grade de horários de **15 em 15 minutos**.
-- Lógica pura (sem React, sem I/O, sem `new Date()` — usa `Clock` injetado), com cobertura de testes ~100%.
+- Lógica pura (sem React, sem I/O). Domínio e aplicação **não usam `new Date()`/`Date.now()`** (barrado no lint): o domínio recebe `now` por parâmetro e os casos de uso obtêm da porta `Clock`. Cobertura do domínio: **100%** (exigida em `npm run coverage`).
+- Implementação: `src/domain/services/AvailabilityService.ts` → `checkSlot` (retorna motivo), `assertSlotAvailable` (lança erro tipado), `listAvailableSlots` (grade de 15 min).
 
 ### Status do agendamento
 
-`SCHEDULED` (Agendado) → `CONFIRMED` (Confirmado) → `IN_SERVICE` (Em atendimento, ao marcar "compareceu") → `COMPLETED` (Concluído, gera `ServiceRecord` com valor e forma de pagamento).
-Saídas: `CANCELLED` (Cancelado), `NO_SHOW` (Cliente faltou). Transições validadas na própria entidade.
+`SCHEDULED` (Agendado) → `CONFIRMED` (Confirmado) → `IN_SERVICE` (Em atendimento, "compareceu") → `COMPLETED` (Concluído, gera `ServiceRecord`).
+Saídas: `CANCELLED` (Cancelado), `NO_SHOW` (Cliente faltou). Tabela completa em `domain/entities/AppointmentStatus.ts` (`ALLOWED_TRANSITIONS`):
+
+- Concluir é permitido direto de `SCHEDULED`/`CONFIRMED` (1 toque), não só de `IN_SERVICE`.
+- `NO_SHOW` → `IN_SERVICE` permitido (desfaz "faltou" quando o cliente chega atrasado).
+- Remarcar mantém a duração, pode trocar de profissional e volta para `SCHEDULED`.
+- Cancelar/remarcar só a partir de `SCHEDULED`/`CONFIRMED`.
 
 ### Políticas
 
-- **Cancelamento:** antecedência mínima (horas) configurável. Vale para cancelamento **feito pelo cliente**. Gestor/recepcionista podem cancelar fora do prazo, mas a UI avisa e exige motivo.
+- **Cancelamento/remarcação:** antecedência mínima (horas, padrão 2h) configurável. Vale para mudanças **feitas pelo cliente**. Gestor/recepcionista podem cancelar fora do prazo, mas a UI avisa e exige motivo.
 - **Falta:** tolerância configurável (padrão 15 min após o início) antes de permitir "Cliente faltou". Histórico do cliente mostra o número de faltas.
 - **Comissão:** percentual por profissional, calculado sobre o **valor efetivamente pago**. Autônomo que aluga cadeira também é modelado só por % na v1.
 - **Ocupação:** minutos agendados (exceto cancelados) ÷ (minutos de escala − bloqueios).
 - Formas de pagamento: dinheiro, Pix, débito, crédito.
 
-### Entidades (código em inglês)
+### Modelo de domínio (código em inglês)
 
-`Barbershop`, `User` (role `OWNER` | `PROFESSIONAL` | `RECEPTIONIST`), `Professional` (foto, especialidade, % comissão), `WorkSchedule` (dias, início/fim, intervalos), `Service` (`kind: SINGLE | COMBO`; combo referencia serviços e tem duração/preço próprios), `Client` (com consentimento LGPD), `Appointment`, `TimeBlock`, `ServiceRecord` (atendimento: valor pago + forma de pagamento), `CancellationPolicy`.
-Value objects: `Money` (centavos, inteiro), `Duration`, `TimeRange`, `Phone`, `Email`.
+Entidades **imutáveis** (cada mudança devolve nova instância; `create`/`restore` validam invariantes; `toProps()` para persistência):
+
+- `Barbershop` (contém `CancellationPolicy`), `User` (role `OWNER` | `PROFESSIONAL` | `RECEPTIONIST`; `PROFESSIONAL` exige `professionalId`), `Professional` (foto, especialidade, `commission: Percentage`, `schedule: WorkSchedule`), `Service` (`kind: SINGLE | COMBO`; combo = ≥2 serviços simples, duração/preço próprios), `Client` (consentimento LGPD), `Appointment`, `TimeBlock`.
+- **Escala** = value object `WorkSchedule` dentro de `Professional` (por dia da semana: `hours` + `breaks`).
+- **Atendimento** = `ServiceRecord` embutido no `Appointment` ao concluir (valor pago, forma de pagamento, horário).
+- IDs com tipo próprio (`ClientId`, `ProfessionalId`…) via `toId<T>()`; gerados fora do domínio.
+
+Value objects: `Money` (centavos), `Percentage` (inteiro 0–100), `Duration` (minutos), `TimeRange` (instantes, `[start, end)`), `TimeOfDay`/`TimeWindow` (horário de parede), `LocalDate` (data em São Paulo), `Phone` (com `masked()`), `Email` (com `masked()`), `CancellationPolicy`, `WorkSchedule`.
+RBAC em `domain/services/access-control.ts` (`hasPermission`, `canManageAgendaOf`…). Erros em `domain/errors` com `code` estável (`DOMAIN_ERROR_CODES`) para a UI traduzir.
+Builders de teste em `src/domain/testing/builders.ts` (dia de referência: quarta 18/11/2026).
 Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já preparados para várias).
 
 ### LGPD
@@ -124,8 +138,8 @@ npm run coverage     # cobertura
 
 ## Fluxo de trabalho
 
-Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `test` verdes → commit → resumo (o que foi feito, como testar no navegador, próximo passo) → **esperar o ok do usuário**. Decisão ambígua: escolher a opção mais simples que respeite a arquitetura e avisar em uma linha.
+Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test`) verdes → commit → resumo (o que foi feito, como testar no navegador, próximo passo) → **esperar o ok do usuário**. Decisão ambígua: escolher a opção mais simples que respeite a arquitetura e avisar em uma linha.
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio · 2. Aplicação + infra mock · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

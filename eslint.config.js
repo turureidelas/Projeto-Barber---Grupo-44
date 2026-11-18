@@ -26,6 +26,12 @@ const UI_AND_IO_PACKAGES = [
   'zod/*',
 ];
 
+// Env vars are read only in src/main/config (composition root).
+const ENV_SELECTOR = {
+  selector: "MemberExpression[object.type='MetaProperty'][property.name='env']",
+  message: 'Leia variáveis de ambiente apenas em src/main/config/env.ts.',
+};
+
 const boundary = (files, forbiddenLayers, forbiddenPackages, message) => ({
   files,
   rules: {
@@ -70,20 +76,33 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       // LGPD: never log personal data. Use a dedicated logger (no PII) if ever needed.
       'no-console': 'error',
-      // Env vars are read only in src/main/config (composition root).
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "MemberExpression[object.type='MetaProperty'][property.name='env']",
-          message: 'Leia variáveis de ambiente apenas em src/main/config/env.ts.',
-        },
-      ],
+      'no-restricted-syntax': ['error', ENV_SELECTOR],
     },
   },
 
   {
     files: ['src/main/config/**/*.ts'],
     rules: { 'no-restricted-syntax': 'off' },
+  },
+
+  // Domain and use cases get "now" from the Clock port, so tests are deterministic.
+  {
+    files: ['src/domain/**/*.ts', 'src/application/**/*.ts'],
+    ignores: ['**/*.test.ts', '**/testing/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ENV_SELECTOR,
+        {
+          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+          message: 'Não use new Date() aqui: receba `now` como parâmetro (porta Clock).',
+        },
+        {
+          selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']",
+          message: 'Não use Date.now() aqui: receba `now` como parâmetro (porta Clock).',
+        },
+      ],
+    },
   },
 
   {
