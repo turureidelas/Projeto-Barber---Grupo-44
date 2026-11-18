@@ -11,6 +11,7 @@ import {
   canManageTimeBlocksOf,
   canViewReportsOf,
   hasPermission,
+  permissionsFor,
   type Permission,
 } from './access-control';
 
@@ -38,6 +39,11 @@ describe('access control (RBAC)', () => {
     expect(hasPermission(owner, permission)).toBe(o);
     expect(hasPermission(barber, permission)).toBe(b);
     expect(hasPermission(receptionist, permission)).toBe(r);
+  });
+
+  it('lists the permissions of each role', () => {
+    expect(permissionsFor(owner)).toHaveLength(11);
+    expect(permissionsFor(receptionist)).toEqual(['agenda:manage-all', 'clients:manage']);
   });
 
   it('throws a typed error when a permission is missing', () => {

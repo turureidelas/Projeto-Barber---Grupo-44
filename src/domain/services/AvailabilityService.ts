@@ -94,18 +94,26 @@ export class AvailabilityService {
       return { available: false, reason: 'TIME_BLOCKED', conflictingId: block.id };
     }
 
-    const conflict = agenda.appointments.find(
-      (candidate) =>
-        candidate.professionalId === agenda.professionalId &&
-        candidate.isActive &&
-        candidate.id !== options.ignoreAppointmentId &&
-        candidate.range.overlaps(slot),
-    );
+    const conflict = findActiveConflict(agenda, slot, options.ignoreAppointmentId);
     if (conflict) {
       return { available: false, reason: 'SCHEDULE_CONFLICT', conflictingId: conflict.id };
     }
 
     return { available: true };
+  }
+
+  /**
+   * "Bloquear horário": a block cannot start in the past nor cover active appointments
+   * (those must be rescheduled or cancelled first). Blocks may overlap other blocks.
+   */
+  assertCanBlock(agenda: ProfessionalAgenda, range: TimeRange, options: { now: Date }): void {
+    if (range.startsBefore(options.now)) {
+      throw new SlotInPastError();
+    }
+    const conflict = findActiveConflict(agenda, range);
+    if (conflict) {
+      throw new ScheduleConflictError(conflict.id);
+    }
   }
 
   /** Same rules as checkSlot, but throws the matching typed DomainError. */
@@ -154,7 +162,7 @@ export class AvailabilityService {
     return slots;
   }
 
-  /** The professional's working windows on `date` as real instants. */
+  /** The professional's working windows on `date` as real instants (used for occupancy). */
   workingRangesOn(schedule: WorkSchedule, date: LocalDate): TimeRange[] {
     return schedule
       .workingWindowsOn(date.weekday)
@@ -162,4 +170,18 @@ export class AvailabilityService {
         TimeRange.create(date.at(window.start, this.timeZone), date.at(window.end, this.timeZone)),
       );
   }
+}
+
+function findActiveConflict(
+  agenda: ProfessionalAgenda,
+  range: TimeRange,
+  ignoreAppointmentId?: AppointmentId,
+): Appointment | undefined {
+  return agenda.appointments.find(
+    (candidate) =>
+      candidate.professionalId === agenda.professionalId &&
+      candidate.isActive &&
+      candidate.id !== ignoreAppointmentId &&
+      candidate.range.overlaps(range),
+  );
 }

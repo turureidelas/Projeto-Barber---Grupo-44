@@ -77,6 +77,17 @@ RBAC em `domain/services/access-control.ts` (`hasPermission`, `canManageAgendaOf
 Builders de teste em `src/domain/testing/builders.ts` (dia de referência: quarta 18/11/2026).
 Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já preparados para várias).
 
+### Aplicação e dados de demonstração
+
+- Casos de uso em `src/application/use-cases` (classe com `execute(input)`), contrato completo no tipo `UseCases` (`use-cases/index.ts`) e montagem em `createUseCases(deps)`. Cada caso de uso declara as dependências que usa com `Pick<ApplicationDependencies, ...>`.
+- **Entrada e saída primitivas:** IDs `string`, instantes ISO 8601, datas `"yyyy-MM-dd"`, dinheiro em centavos. Saída sempre em **DTOs** (`application/dto`), nunca entidades. Telefone/e-mail saem mascarados.
+- O usuário que age é resolvido da **sessão** (`requireActor`), nunca recebido da UI. Permissão checada em todo caso de uso.
+- Erros: `DomainError` e `ApplicationError` (`NOT_FOUND`, `NOT_AUTHENTICATED`, `INVALID_CREDENTIALS`, `RESOURCE_INACTIVE`); `errorCodeOf(error)` dá o código para a UI traduzir.
+- Mock: `InMemoryDatabase` (linhas JSON em `localStorage`, chave `na-regua:demo-db:v1`, latência artificial de 150 ms) + mappers linha⇄entidade em `infrastructure/mappers` (reaproveitáveis para a API). Sessão em `na-regua:session` (só `userId` + validade).
+- Dados de demonstração gerados por `createDemoSeed(now)` (determinístico; 3 semanas de histórico + hoje + 10 dias à frente, validados pelo motor). Contas (senha `demo123`): `ricardo@novaera.demo` (gestor), `bruno@novaera.demo` e `diego@novaera.demo` (profissionais), `camila@novaera.demo` (recepcionista).
+- Composition root: `src/main/container.ts` (`createContainer`); a UI recebe os casos de uso via `UseCasesProvider` / `useUseCases()`.
+- Testes de casos de uso usam `createTestApp()` (`src/main/testing`): app real em memória com fixture pequena e `FixedClock` (quarta 18/11/2026 08:00). Só arquivos `*.test.ts` de `application` podem importar `@main` (exceção no lint).
+
 ### LGPD
 
 Coletar só o necessário; mascarar telefone/e-mail em listagens; **nenhum dado pessoal em `console.*` nem em URL** (use IDs); registro de consentimento do cliente (data, versão do termo, canal).
@@ -142,4 +153,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

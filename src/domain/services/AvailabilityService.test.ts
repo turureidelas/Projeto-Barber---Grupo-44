@@ -355,6 +355,52 @@ describe('AvailabilityService.listAvailableSlots', () => {
   });
 });
 
+describe('AvailabilityService.assertCanBlock', () => {
+  const booked = anAppointment({ start: at('10:00') });
+  const range = (start: string, end: string) => TimeRange.create(at(start), at(end));
+
+  it('allows blocking free time, even over another block or outside working hours', () => {
+    const busy = agenda({
+      appointments: [booked],
+      timeBlocks: [aTimeBlock(at('15:00'), at('16:00'))],
+    });
+    expect(() => {
+      service.assertCanBlock(busy, range('15:30', '17:00'), NOW);
+      service.assertCanBlock(busy, range('19:00', '20:00'), NOW);
+      service.assertCanBlock(busy, range('10:30', '11:00'), NOW);
+    }).not.toThrow();
+  });
+
+  it('refuses to cover an active appointment', () => {
+    expect(() => {
+      service.assertCanBlock(agenda({ appointments: [booked] }), range('09:00', '12:00'), NOW);
+    }).toThrow(ScheduleConflictError);
+  });
+
+  it('ignores cancelled appointments and other professionals', () => {
+    const cancelled = booked.cancel({
+      by: 'STAFF',
+      reason: null,
+      now: at('07:00'),
+      policy: aPolicy(),
+    });
+    const brunos = anAppointment({ professionalId: ids.bruno, start: at('10:00') });
+    expect(() => {
+      service.assertCanBlock(
+        agenda({ appointments: [cancelled, brunos] }),
+        range('09:00', '12:00'),
+        NOW,
+      );
+    }).not.toThrow();
+  });
+
+  it('refuses to start in the past', () => {
+    expect(() => {
+      service.assertCanBlock(agenda(), range('10:00', '11:00'), { now: at('10:30') });
+    }).toThrow(SlotInPastError);
+  });
+});
+
 describe('AvailabilityService configuration', () => {
   it.each([0, 4, 61, 7.5])('rejects a slot step of %s minutes', (slotStepMinutes) => {
     expect(() => new AvailabilityService({ slotStepMinutes })).toThrow(InvalidValueError);

@@ -32,8 +32,9 @@ const ENV_SELECTOR = {
   message: 'Leia variáveis de ambiente apenas em src/main/config/env.ts.',
 };
 
-const boundary = (files, forbiddenLayers, forbiddenPackages, message) => ({
+const boundary = (files, forbiddenLayers, forbiddenPackages, message, ignores = []) => ({
   files,
+  ignores,
   rules: {
     'no-restricted-imports': [
       'error',
@@ -122,6 +123,8 @@ export default defineConfig([
     ['infrastructure', 'presentation', 'main'],
     UI_AND_IO_PACKAGES,
     'application só depende de domain (e shared).',
+    // Use-case tests run against the real in-memory adapters (src/main/testing/createTestApp).
+    ['**/*.test.ts'],
   ),
   boundary(
     ['src/infrastructure/**/*.{ts,tsx}'],

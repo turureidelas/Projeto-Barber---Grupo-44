@@ -30,6 +30,11 @@ export function hasPermission(user: Pick<User, 'role'>, permission: Permission):
   return ROLE_PERMISSIONS[user.role].includes(permission);
 }
 
+/** Everything a user may do — used by the UI to show only what applies. */
+export function permissionsFor(user: Pick<User, 'role'>): readonly Permission[] {
+  return ROLE_PERMISSIONS[user.role];
+}
+
 export function assertPermission(user: Pick<User, 'role'>, permission: Permission): void {
   if (!hasPermission(user, permission)) {
     throw new PermissionDeniedError(permission);
