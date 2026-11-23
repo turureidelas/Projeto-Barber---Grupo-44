@@ -1,4 +1,8 @@
-import { isDomainError, type DomainErrorCode } from '@domain/errors/DomainError';
+import {
+  DOMAIN_ERROR_CODES,
+  isDomainError,
+  type DomainErrorCode,
+} from '@domain/errors/DomainError';
 
 export const APPLICATION_ERROR_CODES = [
   'NOT_FOUND',
@@ -81,13 +85,34 @@ export class AlreadyExistsError extends ApplicationError {
   }
 }
 
+const KNOWN_CODES: readonly string[] = [...DOMAIN_ERROR_CODES, ...APPLICATION_ERROR_CODES];
+
+/** True for any code the UI knows how to explain (anything else becomes UNEXPECTED). */
+export function isKnownErrorCode(value: unknown): value is Exclude<ErrorCode, 'UNEXPECTED'> {
+  return typeof value === 'string' && KNOWN_CODES.includes(value);
+}
+
+/**
+ * A business error reported by the server (HTTP adapters) with one of our stable codes —
+ * the UI treats it exactly like the same error raised locally.
+ */
+export class RemoteError extends Error {
+  readonly code: ErrorCode;
+
+  constructor(code: ErrorCode, message: string) {
+    super(message);
+    this.name = 'RemoteError';
+    this.code = code;
+  }
+}
+
 export function isApplicationError(error: unknown): error is ApplicationError {
   return error instanceof ApplicationError;
 }
 
 /** Stable code for any thrown value — the UI maps it to a pt-BR message. */
 export function errorCodeOf(error: unknown): ErrorCode {
-  if (isDomainError(error) || isApplicationError(error)) {
+  if (isDomainError(error) || isApplicationError(error) || error instanceof RemoteError) {
     return error.code;
   }
   return 'UNEXPECTED';

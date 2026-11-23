@@ -3,7 +3,19 @@ import type { Clock } from '@application/ports/Clock';
 import type { IdGenerator } from '@application/ports/IdGenerator';
 import { createUseCases, type UseCases } from '@application/use-cases';
 import { AvailabilityService } from '@domain/services/AvailabilityService';
+import { HttpAuthGateway } from '@infrastructure/auth/HttpAuthGateway';
 import { InMemoryAuthGateway } from '@infrastructure/auth/InMemoryAuthGateway';
+import { HttpClient, type FetchFn } from '@infrastructure/http/HttpClient';
+import {
+  HttpAppointmentRepository,
+  HttpBarbershopRepository,
+  HttpClientRepository,
+  HttpNotificationRepository,
+  HttpProfessionalRepository,
+  HttpServiceRepository,
+  HttpTimeBlockRepository,
+  HttpUserRepository,
+} from '@infrastructure/repositories/http/http-repositories';
 import { InMemoryDatabase } from '@infrastructure/repositories/in-memory/InMemoryDatabase';
 import { InMemoryDemoData } from '@infrastructure/repositories/in-memory/InMemoryDemoData';
 import {
@@ -29,6 +41,8 @@ export interface ContainerOptions {
   readonly mockLatencyMs?: number;
   /** Seed demo data on first run (mock mode). */
   readonly seedDemoData?: boolean;
+  /** API mode: replaces window.fetch (tests). */
+  readonly fetch?: FetchFn;
 }
 
 export interface Container {
@@ -42,11 +56,12 @@ export interface Container {
  * Swapping mocks for the real API happens here, without touching use cases or screens.
  */
 export function createContainer(options: ContainerOptions): Container {
-  if (!options.env.useMocks) {
-    // Phase 9 adds the HTTP adapters (VITE_USE_MOCKS=false).
-    throw new Error('A integração com a API ainda não está disponível. Use VITE_USE_MOCKS=true.');
-  }
+  const dependencies = options.env.useMocks ? mockDependencies(options) : apiDependencies(options);
+  return { useCases: createUseCases(dependencies), dependencies };
+}
 
+/** VITE_USE_MOCKS=true: in-memory repositories with the Barbearia Nova Era demo. */
+function mockDependencies(options: ContainerOptions): ApplicationDependencies {
   const clock = options.clock ?? new SystemClock();
   const db = new InMemoryDatabase({
     storage: options.storage,
@@ -57,7 +72,7 @@ export function createContainer(options: ContainerOptions): Container {
     demoData.ensureSeeded();
   }
 
-  const dependencies: ApplicationDependencies = {
+  return {
     clock,
     ids: options.ids ?? new CryptoIdGenerator(),
     auth: new InMemoryAuthGateway(db, options.storage, clock),
@@ -72,6 +87,31 @@ export function createContainer(options: ContainerOptions): Container {
     notifications: new InMemoryNotificationRepository(db),
     demoData,
   };
+}
 
-  return { useCases: createUseCases(dependencies), dependencies };
+/** VITE_USE_MOCKS=false: the same ports over the API at VITE_API_URL. No demo tools. */
+function apiDependencies(options: ContainerOptions): ApplicationDependencies {
+  const auth = new HttpAuthGateway(options.storage);
+  const http = new HttpClient({
+    baseUrl: options.env.apiUrl,
+    getToken: () => auth.token(),
+    ...(options.fetch && { fetch: options.fetch }),
+  });
+  auth.connect(http);
+
+  return {
+    clock: options.clock ?? new SystemClock(),
+    ids: options.ids ?? new CryptoIdGenerator(),
+    auth,
+    availability: new AvailabilityService(),
+    barbershops: new HttpBarbershopRepository(http),
+    users: new HttpUserRepository(http),
+    professionals: new HttpProfessionalRepository(http),
+    services: new HttpServiceRepository(http),
+    clients: new HttpClientRepository(http),
+    appointments: new HttpAppointmentRepository(http),
+    timeBlocks: new HttpTimeBlockRepository(http),
+    notifications: new HttpNotificationRepository(http),
+    demoData: null,
+  };
 }
