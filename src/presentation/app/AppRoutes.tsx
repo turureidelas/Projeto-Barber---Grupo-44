@@ -1,0 +1,72 @@
+import { Route, Routes } from 'react-router';
+import { RequireAuth, RequirePermission } from '../components/auth/guards';
+import { AppShell } from '../components/layout/AppShell';
+import { LoginPage } from '../pages/login/LoginPage';
+import { MorePage } from '../pages/more/MorePage';
+import {
+  ClientsPage,
+  ProfessionalsPage,
+  ReportsPage,
+  ServicesPage,
+  SettingsPage,
+  TodayPage,
+  WeekPage,
+} from '../pages/placeholders';
+import { NotFoundPage } from '../pages/system/NotFoundPage';
+import { paths, ROUTE_PERMISSIONS } from './routes';
+
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route path={paths.login} element={<LoginPage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route index element={<TodayPage />} />
+          <Route path={paths.week} element={<WeekPage />} />
+          <Route
+            path={paths.clients}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.clients}>
+                <ClientsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path={paths.services}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.services}>
+                <ServicesPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path={paths.professionals}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.professionals}>
+                <ProfessionalsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path={paths.reports}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.reports}>
+                <ReportsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path={paths.settings}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.settings}>
+                <SettingsPage />
+              </RequirePermission>
+            }
+          />
+          <Route path={paths.more} element={<MorePage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}

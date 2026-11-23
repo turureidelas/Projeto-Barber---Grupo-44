@@ -17,6 +17,7 @@ import {
   emptySnapshot,
   InMemoryDatabase,
 } from '@infrastructure/repositories/in-memory/InMemoryDatabase';
+import { createDemoSeed } from '@infrastructure/repositories/in-memory/seed/demo-seed';
 import { MemoryStorage } from '@infrastructure/storage/KeyValueStorage';
 import { createContainer, type Container } from '../container';
 
@@ -77,9 +78,19 @@ export interface TestApp extends Container {
   signInAs(persona: Persona): Promise<SessionUserDTO>;
 }
 
-export function createTestApp(now: Date = at('08:00')): TestApp {
+export interface TestAppOptions {
+  readonly now?: Date;
+  /** 'fixture' (default): small explicit data set. 'demo': the full Barbearia Nova Era seed. */
+  readonly dataset?: 'fixture' | 'demo';
+}
+
+export function createTestApp(options: TestAppOptions | Date = {}): TestApp {
+  const { now = at('08:00'), dataset = 'fixture' } =
+    options instanceof Date ? { now: options } : options;
   const storage = new MemoryStorage();
-  new InMemoryDatabase({ storage }).replaceAll(buildFixture());
+  new InMemoryDatabase({ storage }).replaceAll(
+    dataset === 'demo' ? createDemoSeed(now) : buildFixture(),
+  );
 
   const clock = new FixedClock(now);
   const container = createContainer({

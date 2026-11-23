@@ -88,6 +88,18 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - Composition root: `src/main/container.ts` (`createContainer`); a UI recebe os casos de uso via `UseCasesProvider` / `useUseCases()`.
 - Testes de casos de uso usam `createTestApp()` (`src/main/testing`): app real em memória com fixture pequena e `FixedClock` (quarta 18/11/2026 08:00). Só arquivos `*.test.ts` de `application` podem importar `@main` (exceção no lint).
 
+### Interface (presentation)
+
+- Tokens de design em `presentation/styles/index.css` (`@theme`): `bg`, `surface`(-2/-3), `line`/`line-strong` (bordas de campo ≥ 3:1), `fg`/`fg-muted`, `accent` (dourado) + `accent-fg`, `success`/`warning`/`danger`/`info`. Só tema escuro na v1.
+- Componentes em `components/ui`: `Button`/`IconButton` (`buttonClasses()` para links), `TextField`/`SelectField` (label + hint/erro via `aria-describedby`), `Card`, `Badge`, `Avatar`, `Modal` (`<dialog>` nativo; gaveta inferior no celular), `PageHeader` (o único `<h1>`), `Table`/`Th`/`Td`, `LoadingState`/`EmptyState`/`ErrorState`, toasts (`useToast()`).
+- Rotas em `app/routes.ts` (`paths`, `ROUTE_PERMISSIONS`, `navItemsFor(user)`); URLs em pt-BR (`/entrar`, `/semana`, `/clientes`, `/relatorios`…). `RequireAuth` (rota-layout) e `RequirePermission` (tela "Sem acesso").
+- Layout `AppShell`: menu lateral no desktop (`lg:`), barra superior + menu inferior (até 4 itens + "Mais") no celular.
+- Estado de servidor com TanStack Query (`app/query-client.ts`: só erro `UNEXPECTED` é repetido; `NOT_AUTHENTICATED` encerra a sessão). Chaves em `hooks/query-keys.ts`. Sessão: `useSession`/`useCurrentUser`/`useSignIn`/`useSignOut`.
+- Mensagens de erro: `errorMessage(error)` (`i18n/errors.ts`) → `ptBR.errors[code]`.
+- `eslint-plugin-jsx-a11y` (strict) ativo em todo `.tsx` (instalado com `overrides` no `package.json` porque ainda não declara suporte ao ESLint 10).
+- Testes de tela: `renderApp({ route, as, app })` (`src/main/testing/renderApp.tsx`) renderiza o app inteiro sobre os casos de uso reais; `createTestApp({ dataset: 'demo' })` usa o seed completo. jsdom ganha polyfill de `showModal`/`close` em `vitest.setup.ts`.
+- Telas das fases 4–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
+
 ### LGPD
 
 Coletar só o necessário; mascarar telefone/e-mail em listagens; **nenhum dado pessoal em `console.*` nem em URL** (use IDs); registro de consentimento do cliente (data, versão do termo, canal).
@@ -153,4 +165,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

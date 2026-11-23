@@ -1,4 +1,5 @@
 import type { ApplicationDependencies } from '../dependencies';
+import type { DemoAccount } from '../ports/DemoDataGateway';
 import type { AppointmentDTO, DailyAgendaDTO, SlotDTO, TimeBlockDTO } from '../dto/agenda';
 import type {
   BarbershopDTO,
@@ -39,7 +40,7 @@ import {
   type ListInput,
   type SearchClientsInput,
 } from './catalog/catalog-use-cases';
-import { ResetDemoData } from './demo/ResetDemoData';
+import { ListDemoAccounts, ResetDemoData } from './demo/ResetDemoData';
 import type { UseCase } from './UseCase';
 
 /**
@@ -72,7 +73,10 @@ export interface UseCases {
     readonly getBarbershop: UseCase<void, BarbershopDTO>;
   };
   /** null when running against the real API. */
-  readonly demo: { readonly resetDemoData: UseCase<void, void> } | null;
+  readonly demo: {
+    readonly resetDemoData: UseCase<void, void>;
+    readonly listAccounts: UseCase<void, DemoAccount[]>;
+  } | null;
 }
 
 export function createUseCases(deps: ApplicationDependencies): UseCases {
@@ -101,11 +105,17 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
       searchClients: new SearchClients(deps),
       getBarbershop: new GetBarbershop(deps),
     },
-    demo: deps.demoData ? { resetDemoData: new ResetDemoData(deps.demoData) } : null,
+    demo: deps.demoData
+      ? {
+          resetDemoData: new ResetDemoData(deps.demoData),
+          listAccounts: new ListDemoAccounts(deps.demoData),
+        }
+      : null,
   };
 }
 
 export type { UseCase } from './UseCase';
+export type { DemoAccount } from '../ports/DemoDataGateway';
 export type * from './agenda/appointment-status-commands';
 export type { GetDailyAgendaInput } from './agenda/GetDailyAgenda';
 export type { ListAvailableSlotsInput } from './agenda/ListAvailableSlots';

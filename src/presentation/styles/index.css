@@ -1,21 +1,73 @@
 @import 'tailwindcss';
 
-/* Design tokens completos chegam na Fase 3. */
+/*
+ * Design tokens — identidade "barbearia": fundo escuro + dourado.
+ * Contraste conferido (WCAG): texto ≥ 6:1, bordas de campos ≥ 3:1.
+ */
 @theme {
-  --color-ink: #0f0f10;
-  --color-accent: #e8a33d;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+  --color-bg: #0f0f11;
+  --color-surface: #18181b;
+  --color-surface-2: #232328;
+  --color-surface-3: #2d2d33;
+  --color-line: #34343b;
+  --color-line-strong: #6e6e7a;
+
+  --color-fg: #f5f3ee;
+  --color-fg-muted: #a9a6a0;
+
+  --color-accent: #f2b544;
+  --color-accent-hover: #f6c66a;
+  --color-accent-fg: #1c1405;
+
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-danger-strong: #c62828;
+  --color-info: #7cb4fb;
+
+  --radius-card: 1rem;
+
+  --animate-toast-in: toast-in 160ms ease-out;
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer base {
   html {
     color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-ink text-stone-100 antialiased;
+    @apply bg-bg font-sans text-base text-fg antialiased;
   }
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.7);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

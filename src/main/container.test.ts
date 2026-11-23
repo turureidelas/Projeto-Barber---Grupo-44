@@ -26,6 +26,17 @@ describe('createContainer (mock mode)', () => {
     }
   });
 
+  it('offers the demo accounts for one-tap sign-in', async () => {
+    const accounts = await boot().useCases.demo?.listAccounts.execute();
+    expect(accounts?.map((account) => account.role)).toEqual([
+      'OWNER',
+      'PROFESSIONAL',
+      'PROFESSIONAL',
+      'RECEPTIONIST',
+    ]);
+    expect(accounts?.every((account) => account.password === DEMO_PASSWORD)).toBe(true);
+  });
+
   it('shows a lively agenda for today', async () => {
     const { useCases } = boot();
     await useCases.auth.signIn.execute({ email: 'ricardo@novaera.demo', password: DEMO_PASSWORD });

@@ -1,6 +1,7 @@
 import type { Clock } from '@application/ports/Clock';
-import type { DemoDataGateway } from '@application/ports/DemoDataGateway';
+import type { DemoAccount, DemoDataGateway } from '@application/ports/DemoDataGateway';
 import type { InMemoryDatabase } from './InMemoryDatabase';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from './seed/demo-catalog';
 import { createDemoSeed } from './seed/demo-seed';
 
 export class InMemoryDemoData implements DemoDataGateway {
@@ -22,5 +23,16 @@ export class InMemoryDemoData implements DemoDataGateway {
   reset(): Promise<void> {
     this.db.replaceAll(createDemoSeed(this.clock.now()));
     return Promise.resolve();
+  }
+
+  listAccounts(): Promise<DemoAccount[]> {
+    return Promise.resolve(
+      DEMO_ACCOUNTS.map(({ name, email, role }) => ({
+        name,
+        email,
+        role,
+        password: DEMO_PASSWORD,
+      })),
+    );
   }
 }
