@@ -4,16 +4,9 @@ import { ptBR } from '../../i18n/pt-BR';
 import { Button } from '../ui/Button';
 import { SelectField, TextAreaField, TextField } from '../ui/fields';
 import { Modal } from '../ui/Modal';
+import { TIME_OPTIONS } from '../ui/time-options';
 
 const t = ptBR.block;
-
-/** 06:00 … 23:45 every 15 minutes, plus 24:00 as an end. */
-const TIMES = Array.from({ length: (24 - 6) * 4 + 1 }, (_, index) => {
-  const minutes = 6 * 60 + index * 15;
-  const hours = String(Math.floor(minutes / 60)).padStart(2, '0');
-  return `${hours}:${String(minutes % 60).padStart(2, '0')}`;
-});
-const TIME_OPTIONS = TIMES.map((time) => ({ value: time, label: time }));
 
 export interface BlockTimeValues {
   readonly start: string;

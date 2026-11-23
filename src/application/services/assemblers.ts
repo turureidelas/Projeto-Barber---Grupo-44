@@ -12,6 +12,7 @@ import type { AppointmentDTO, TimeBlockDTO } from '../dto/agenda';
 import type {
   BarbershopDTO,
   ClientSummaryDTO,
+  ProfessionalDetailsDTO,
   ProfessionalDTO,
   ServiceDTO,
   SessionUserDTO,
@@ -121,6 +122,30 @@ export function toProfessionalDTO(
     photoUrl: professional.photoUrl,
     active: professional.active,
     commissionPercent: canSeeCommission ? professional.commission.value : null,
+  };
+}
+
+/** Full record for whoever manages the team (commission and weekly hours). */
+export function toProfessionalDetailsDTO(professional: Professional): ProfessionalDetailsDTO {
+  return {
+    ...toProfessionalDTO(professional, true),
+    commissionPercent: professional.commission.value,
+    schedule: professional.schedule.workingDays().flatMap((weekday) => {
+      const day = professional.schedule.dayOf(weekday);
+      return day
+        ? [
+            {
+              weekday,
+              start: day.hours.start.toString(),
+              end: day.hours.end.toString(),
+              breaks: day.breaks.map((pause) => ({
+                start: pause.start.toString(),
+                end: pause.end.toString(),
+              })),
+            },
+          ]
+        : [];
+    }),
   };
 }
 

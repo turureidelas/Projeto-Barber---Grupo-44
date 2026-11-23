@@ -69,6 +69,43 @@ export function TextField({ label, hint, error, id, className, ...rest }: TextFi
   );
 }
 
+export interface CheckboxFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  readonly label: string;
+  readonly error?: string | undefined;
+}
+
+/** Big tap area: the whole row (box + text) toggles the checkbox. */
+export function CheckboxField({ label, error, id, className, ...rest }: CheckboxFieldProps) {
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
+  return (
+    <div className="flex flex-col gap-1">
+      <label
+        htmlFor={fieldId}
+        className={cx(
+          'flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-1 py-2',
+          className,
+        )}
+      >
+        <input
+          id={fieldId}
+          type="checkbox"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${fieldId}-error` : undefined}
+          className="size-5 shrink-0 accent-[var(--color-accent)]"
+          {...rest}
+        />
+        <span>{label}</span>
+      </label>
+      {error && (
+        <p id={`${fieldId}-error`} role="alert" className="text-sm font-medium text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   readonly label: string;
   readonly hint?: string;

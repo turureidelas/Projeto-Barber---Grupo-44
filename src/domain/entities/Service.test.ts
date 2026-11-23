@@ -79,6 +79,15 @@ describe('Service', () => {
     });
   });
 
+  it('changes the items of a combo with the same rules', () => {
+    const combo = aCombo([haircut, beard]);
+    const eyebrows = aSingleService(toId<ServiceId>('svc-eyebrows'), 'Sobrancelha');
+    expect(combo.changeComboItems([haircut, beard, eyebrows]).includedServiceIds).toHaveLength(3);
+    expect(() => combo.changeComboItems([haircut])).toThrow(InvalidValueError);
+    expect(() => combo.changeComboItems([combo, haircut])).toThrow(InvalidValueError);
+    expect(() => haircut.changeComboItems([beard, eyebrows])).toThrow(InvalidValueError);
+  });
+
   it('rejects a single service that includes others', () => {
     expect(() =>
       Service.restore({ ...haircut.toProps(), includedServiceIds: [ids.beard] }),

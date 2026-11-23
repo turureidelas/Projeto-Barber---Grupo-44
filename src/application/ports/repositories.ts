@@ -15,6 +15,7 @@ import type { Service } from '@domain/entities/Service';
 import type { TimeBlock } from '@domain/entities/TimeBlock';
 import type { User } from '@domain/entities/User';
 import type { Email } from '@domain/value-objects/Email';
+import type { Phone } from '@domain/value-objects/Phone';
 import type { TimeRange } from '@domain/value-objects/TimeRange';
 
 /**
@@ -54,6 +55,7 @@ export interface ServiceRepository {
 export interface ClientRepository {
   findById(id: ClientId): Promise<Client | null>;
   findByIds(ids: readonly ClientId[]): Promise<Client[]>;
+  findByPhone(barbershopId: BarbershopId, phone: Phone): Promise<Client | null>;
   /** Matches name (ignoring case/accents) or phone digits. */
   search(barbershopId: BarbershopId, query: string, limit: number): Promise<Client[]>;
   save(client: Client): Promise<void>;

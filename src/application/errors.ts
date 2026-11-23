@@ -5,6 +5,7 @@ export const APPLICATION_ERROR_CODES = [
   'NOT_AUTHENTICATED',
   'INVALID_CREDENTIALS',
   'RESOURCE_INACTIVE',
+  'ALREADY_EXISTS',
 ] as const;
 
 export type ApplicationErrorCode = (typeof APPLICATION_ERROR_CODES)[number];
@@ -59,6 +60,17 @@ export class ResourceInactiveError extends ApplicationError {
   constructor(resource: 'professional' | 'service') {
     super(`This ${resource} is inactive.`);
     this.resource = resource;
+  }
+}
+
+/** e.g. another client already has this phone number. */
+export class AlreadyExistsError extends ApplicationError {
+  readonly code = 'ALREADY_EXISTS';
+  readonly field: 'phone';
+
+  constructor(field: 'phone') {
+    super(`Another record already uses this ${field}.`);
+    this.field = field;
   }
 }
 

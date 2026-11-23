@@ -102,6 +102,7 @@ export function createDemoSeed(now: Date): DatabaseSnapshot {
   });
 
   const appointments: Appointment[] = [];
+  const pickClient = createClientPicker(random, clients);
   let sequence = 0;
 
   for (let offset = -DAYS_BEFORE; offset <= DAYS_AFTER; offset++) {
@@ -142,7 +143,7 @@ export function createDemoSeed(now: Date): DatabaseSnapshot {
               id: toId(`appt-${String(sequence).padStart(4, '0')}`),
               barbershopId: shopId,
               professionalId: professional.id,
-              clientId: random.pick(asNonEmpty(clients)).id,
+              clientId: pickClient(slot.start).id,
               serviceId: service.id,
               start: slot.start,
               duration: service.duration,
@@ -332,6 +333,28 @@ function withRealisticStatus(appointment: Appointment, context: StatusContext): 
     return appointment.cancel({ by: 'CLIENT', reason: null, now, policy });
   }
   return context.offset <= 1 && roll < 0.65 ? appointment.confirm() : appointment;
+}
+
+const MIN_DAYS_BETWEEN_VISITS = 10;
+const PICK_ATTEMPTS = 8;
+
+/**
+ * Picks a client for a booking, preferring someone who hasn't been in for a while — so clients
+ * come back every couple of weeks, like in real life, instead of on random consecutive days.
+ */
+function createClientPicker(random: SeededRandom, clients: readonly Client[]) {
+  const pool = asNonEmpty(clients);
+  const lastBooking = new Map<string, number>();
+  return (start: Date): Client => {
+    let candidate = random.pick(pool);
+    for (let attempt = 1; attempt < PICK_ATTEMPTS; attempt++) {
+      const last = lastBooking.get(candidate.id);
+      if (last === undefined || start.getTime() - last >= MIN_DAYS_BETWEEN_VISITS * DAY) break;
+      candidate = random.pick(pool);
+    }
+    lastBooking.set(candidate.id, start.getTime());
+    return candidate;
+  };
 }
 
 function roundUpToSlot(minute: number): number {

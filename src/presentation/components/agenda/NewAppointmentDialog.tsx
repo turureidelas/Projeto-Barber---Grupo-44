@@ -1,10 +1,13 @@
 import type { ClientSummaryDTO, ProfessionalDTO } from '@application/dto/catalog';
 import type { ScheduleAppointmentInput } from '@application/use-cases';
 import { formatMoney } from '@shared/format';
-import { Search, UserRound } from 'lucide-react';
+import { Search, UserPlus, UserRound } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useAvailableSlots } from '../../hooks/useAgenda';
-import { useClientSearch, useServices } from '../../hooks/useCatalog';
+import { useCatalogMutations, useClientSearch, useServices } from '../../hooks/useCatalog';
+import { useCurrentUser } from '../../hooks/useSession';
+import { QuickClientForm } from '../clients/client-form';
+import { toClientInput } from '../clients/client-form-schema';
 import { ptBR } from '../../i18n/pt-BR';
 import { Button } from '../ui/Button';
 import { SelectField, TextField } from '../ui/fields';
@@ -190,8 +193,29 @@ interface ClientPickerProps {
 
 function ClientPicker({ error, onPick }: ClientPickerProps) {
   const [query, setQuery] = useState('');
-  const results = useClientSearch(query, true);
+  const [creating, setCreating] = useState(false);
+  const results = useClientSearch(query);
   const listId = useId();
+  const user = useCurrentUser();
+  const { createClient } = useCatalogMutations();
+  const canCreate = user.permissions.includes('clients:manage');
+
+  if (creating) {
+    return (
+      <QuickClientForm
+        pending={createClient.isPending}
+        onCancel={() => {
+          setCreating(false);
+        }}
+        onSubmit={(values) => {
+          createClient.mutate(
+            { ...toClientInput(values), consentGiven: values.consent },
+            { onSuccess: onPick },
+          );
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -234,6 +258,18 @@ function ClientPicker({ error, onPick }: ClientPickerProps) {
           </ul>
         )}
       </div>
+      {canCreate && (
+        <Button
+          variant="ghost"
+          icon={UserPlus}
+          className="self-start"
+          onClick={() => {
+            setCreating(true);
+          }}
+        >
+          {ptBR.clients.quickCreate}
+        </Button>
+      )}
     </div>
   );
 }

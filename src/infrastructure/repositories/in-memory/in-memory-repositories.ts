@@ -25,6 +25,7 @@ import type { Service } from '@domain/entities/Service';
 import type { TimeBlock } from '@domain/entities/TimeBlock';
 import type { User } from '@domain/entities/User';
 import type { Email } from '@domain/value-objects/Email';
+import type { Phone } from '@domain/value-objects/Phone';
 import { normalizeForSearch } from '@shared/text';
 import * as map from '../../mappers/mappers';
 import { EntityTable, overlapsIso } from './EntityTable';
@@ -124,6 +125,13 @@ export class InMemoryClientRepository implements ClientRepository {
   findByIds(ids: readonly ClientId[]): Promise<Client[]> {
     const wanted = new Set<string>(ids);
     return this.table.where((row) => wanted.has(row.id));
+  }
+
+  async findByPhone(barbershopId: BarbershopId, phone: Phone): Promise<Client | null> {
+    const [client] = await this.table.where(
+      (row) => row.barbershopId === barbershopId && row.phone === phone.digits,
+    );
+    return client ?? null;
   }
 
   async search(barbershopId: BarbershopId, query: string, limit: number): Promise<Client[]> {

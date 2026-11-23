@@ -82,7 +82,7 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - Casos de uso em `src/application/use-cases` (classe com `execute(input)`), contrato completo no tipo `UseCases` (`use-cases/index.ts`) e montagem em `createUseCases(deps)`. Cada caso de uso declara as dependências que usa com `Pick<ApplicationDependencies, ...>`.
 - **Entrada e saída primitivas:** IDs `string`, instantes ISO 8601, datas `"yyyy-MM-dd"`, dinheiro em centavos. Saída sempre em **DTOs** (`application/dto`), nunca entidades. Telefone/e-mail saem mascarados.
 - O usuário que age é resolvido da **sessão** (`requireActor`), nunca recebido da UI. Permissão checada em todo caso de uso.
-- Erros: `DomainError` e `ApplicationError` (`NOT_FOUND`, `NOT_AUTHENTICATED`, `INVALID_CREDENTIALS`, `RESOURCE_INACTIVE`); `errorCodeOf(error)` dá o código para a UI traduzir.
+- Erros: `DomainError` e `ApplicationError` (`NOT_FOUND`, `NOT_AUTHENTICATED`, `INVALID_CREDENTIALS`, `RESOURCE_INACTIVE`, `ALREADY_EXISTS`); `errorCodeOf(error)` dá o código para a UI traduzir.
 - Mock: `InMemoryDatabase` (linhas JSON em `localStorage`, chave `na-regua:demo-db:v1`, latência artificial de 150 ms) + mappers linha⇄entidade em `infrastructure/mappers` (reaproveitáveis para a API). Sessão em `na-regua:session` (só `userId` + validade).
 - Dados de demonstração gerados por `createDemoSeed(now)` (determinístico; 3 semanas de histórico + hoje + 10 dias à frente, validados pelo motor). Contas (senha `demo123`): `ricardo@novaera.demo` (gestor), `bruno@novaera.demo` e `diego@novaera.demo` (profissionais), `camila@novaera.demo` (recepcionista).
 - Composition root: `src/main/container.ts` (`createContainer`); a UI recebe os casos de uso via `UseCasesProvider` / `useUseCases()`.
@@ -104,7 +104,12 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - `AppointmentDTO.changeDeadline` e `noShowAllowedFrom` vêm do servidor: a UI só compara com `useNow()`, não recalcula regra.
 - Componentes compartilhados da agenda em `components/agenda` (`filters.tsx` com `PeriodNavigator`/`ProfessionalFilter`, `timeline.ts`). Conteúdo largo: `main` vai até `max-w-7xl`; a agenda do dia limita a si mesma a `max-w-3xl`.
 - Dinheiro digitado: `parseMoneyInput`/`formatMoneyInput` (`shared/money.ts`). Datas: `startOfWeek`, `localDateTimeToIso`, `isoToLocalDate`, `formatDateTime` (`shared/format.ts`).
-- Telas das fases 6–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
+- **Cadastros** (só o gestor, exceto clientes que a recepção também gerencia):
+  - Serviços (`pages/services`): tabela + `ServiceFormDialog` (serviço ou combo; combo mostra quanto custaria separado). Casos de uso `CreateService`/`UpdateService`/`SetServiceActive`.
+  - Equipe (`pages/professionals`): cartões com comissão e escala; `ProfessionalFormDialog` e `ScheduleDialog` (um intervalo por dia na UI; o domínio aceita vários). Novo profissional abre a escala em seguida. Mudar a escala **não** mexe em agendamentos já marcados.
+  - Clientes (`pages/clients`): lista mascarada com busca, ficha `/clientes/:id` (telefone completo, consentimento, números de `summarizeClientHistory`, histórico). Cadastro exige consentimento LGPD (`CURRENT_TERMS_VERSION`) e telefone único (`ALREADY_EXISTS`). "Total gasto" só para quem vê relatórios. Cadastro rápido dentro do Novo agendamento (`QuickClientForm`, sem `<form>` aninhado).
+- Dados de demonstração: 360 clientes fictícios; o gerador prefere clientes sem visita nos últimos 10 dias (retorno realista).
+- Telas das fases 7–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
 
 ### LGPD
 
@@ -171,4 +176,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

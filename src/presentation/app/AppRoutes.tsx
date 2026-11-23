@@ -3,13 +3,11 @@ import { RequireAuth, RequirePermission } from '../components/auth/guards';
 import { AppShell } from '../components/layout/AppShell';
 import { LoginPage } from '../pages/login/LoginPage';
 import { MorePage } from '../pages/more/MorePage';
-import {
-  ClientsPage,
-  ProfessionalsPage,
-  ReportsPage,
-  ServicesPage,
-  SettingsPage,
-} from '../pages/placeholders';
+import { ClientDetailsPage } from '../pages/clients/ClientDetailsPage';
+import { ClientsPage } from '../pages/clients/ClientsPage';
+import { ReportsPage, SettingsPage } from '../pages/placeholders';
+import { ProfessionalsPage } from '../pages/professionals/ProfessionalsPage';
+import { ServicesPage } from '../pages/services/ServicesPage';
 import { NotFoundPage } from '../pages/system/NotFoundPage';
 import { TodayPage } from '../pages/today/TodayPage';
 import { WeekPage } from '../pages/week/WeekPage';
@@ -28,6 +26,14 @@ export function AppRoutes() {
             element={
               <RequirePermission anyOf={ROUTE_PERMISSIONS.clients}>
                 <ClientsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path={paths.clientDetails(':clientId')}
+            element={
+              <RequirePermission anyOf={ROUTE_PERMISSIONS.clients}>
+                <ClientDetailsPage />
               </RequirePermission>
             }
           />

@@ -61,14 +61,7 @@ export class Service {
 
   static createCombo(input: ComboInput): Service {
     const { items, ...rest } = input;
-    for (const item of items) {
-      if (item.kind !== 'SINGLE') {
-        throw new InvalidValueError('combo', 'can only include single services');
-      }
-      if (item.barbershopId !== input.barbershopId) {
-        throw new InvalidValueError('combo', 'items must belong to the same barbershop');
-      }
-    }
+    assertComboItems(items, input.barbershopId);
     return Service.restore({
       ...rest,
       kind: 'COMBO',
@@ -90,6 +83,15 @@ export class Service {
     return Service.restore({ ...this.toProps(), ...changes });
   }
 
+  /** Replaces what a combo includes (same rules as when creating it). */
+  changeComboItems(items: readonly Service[]): Service {
+    if (!this.isCombo) {
+      throw new InvalidValueError('service', 'only combos include other services');
+    }
+    assertComboItems(items, this.barbershopId);
+    return Service.restore({ ...this.toProps(), includedServiceIds: items.map((item) => item.id) });
+  }
+
   activate(): Service {
     return Service.restore({ ...this.toProps(), active: true });
   }
@@ -109,6 +111,17 @@ export class Service {
       includedServiceIds: this.includedServiceIds,
       active: this.active,
     };
+  }
+}
+
+function assertComboItems(items: readonly Service[], barbershopId: BarbershopId): void {
+  for (const item of items) {
+    if (item.kind !== 'SINGLE') {
+      throw new InvalidValueError('combo', 'can only include single services');
+    }
+    if (item.barbershopId !== barbershopId) {
+      throw new InvalidValueError('combo', 'items must belong to the same barbershop');
+    }
   }
 }
 

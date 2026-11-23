@@ -9,7 +9,9 @@ import type {
 } from '../dto/agenda';
 import type {
   BarbershopDTO,
+  ClientDetailsDTO,
   ClientSummaryDTO,
+  ProfessionalDetailsDTO,
   ProfessionalDTO,
   ServiceDTO,
   SessionUserDTO,
@@ -47,6 +49,32 @@ import {
   type ListInput,
   type SearchClientsInput,
 } from './catalog/catalog-use-cases';
+import {
+  CreateClient,
+  GetClientDetails,
+  UpdateClient,
+  type CreateClientInput,
+  type UpdateClientInput,
+} from './catalog/client-management';
+import {
+  CreateProfessional,
+  GetProfessional,
+  SetProfessionalActive,
+  UpdateProfessional,
+  UpdateWorkSchedule,
+  type ProfessionalInput,
+  type SetProfessionalActiveInput,
+  type UpdateProfessionalInput,
+  type UpdateWorkScheduleInput,
+} from './catalog/professional-management';
+import {
+  CreateService,
+  SetServiceActive,
+  UpdateService,
+  type ServiceInput,
+  type SetActiveInput,
+  type UpdateServiceInput,
+} from './catalog/service-management';
 import { ListDemoAccounts, ResetDemoData } from './demo/ResetDemoData';
 import type { UseCase } from './UseCase';
 
@@ -79,6 +107,17 @@ export interface UseCases {
     readonly listServices: UseCase<ListInput, ServiceDTO[]>;
     readonly searchClients: UseCase<SearchClientsInput, ClientSummaryDTO[]>;
     readonly getBarbershop: UseCase<void, BarbershopDTO>;
+    readonly createService: UseCase<ServiceInput, ServiceDTO>;
+    readonly updateService: UseCase<UpdateServiceInput, ServiceDTO>;
+    readonly setServiceActive: UseCase<SetActiveInput, ServiceDTO>;
+    readonly getProfessional: UseCase<{ professionalId: string }, ProfessionalDetailsDTO>;
+    readonly createProfessional: UseCase<ProfessionalInput, ProfessionalDetailsDTO>;
+    readonly updateProfessional: UseCase<UpdateProfessionalInput, ProfessionalDetailsDTO>;
+    readonly updateWorkSchedule: UseCase<UpdateWorkScheduleInput, ProfessionalDetailsDTO>;
+    readonly setProfessionalActive: UseCase<SetProfessionalActiveInput, ProfessionalDetailsDTO>;
+    readonly createClient: UseCase<CreateClientInput, ClientSummaryDTO>;
+    readonly updateClient: UseCase<UpdateClientInput, ClientSummaryDTO>;
+    readonly getClientDetails: UseCase<{ clientId: string }, ClientDetailsDTO>;
   };
   /** null when running against the real API. */
   readonly demo: {
@@ -113,6 +152,17 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
       listServices: new ListServices(deps),
       searchClients: new SearchClients(deps),
       getBarbershop: new GetBarbershop(deps),
+      createService: new CreateService(deps),
+      updateService: new UpdateService(deps),
+      setServiceActive: new SetServiceActive(deps),
+      getProfessional: new GetProfessional(deps),
+      createProfessional: new CreateProfessional(deps),
+      updateProfessional: new UpdateProfessional(deps),
+      updateWorkSchedule: new UpdateWorkSchedule(deps),
+      setProfessionalActive: new SetProfessionalActive(deps),
+      createClient: new CreateClient(deps),
+      updateClient: new UpdateClient(deps),
+      getClientDetails: new GetClientDetails(deps),
     },
     demo: deps.demoData
       ? {
@@ -134,3 +184,19 @@ export type { ScheduleAppointmentInput } from './agenda/ScheduleAppointment';
 export type { BlockTimeInput, UnblockTimeInput } from './agenda/time-block-use-cases';
 export type { SignInInput } from './auth/auth-use-cases';
 export type { ListInput, SearchClientsInput } from './catalog/catalog-use-cases';
+export type {
+  CreateClientInput,
+  UpdateClientInput,
+  ClientInput,
+} from './catalog/client-management';
+export type {
+  ProfessionalInput,
+  UpdateProfessionalInput,
+  UpdateWorkScheduleInput,
+  SetProfessionalActiveInput,
+} from './catalog/professional-management';
+export type {
+  ServiceInput,
+  UpdateServiceInput,
+  SetActiveInput,
+} from './catalog/service-management';

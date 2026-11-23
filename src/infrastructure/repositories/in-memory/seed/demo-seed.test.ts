@@ -32,7 +32,9 @@ describe('demo seed (Barbearia Nova Era)', () => {
       'Diego Lima',
     ]);
     expect(seed.services.filter((service) => service.kind === 'COMBO')).toHaveLength(2);
-    expect(seed.clients.length).toBeGreaterThanOrEqual(30);
+    expect(seed.clients.length).toBe(360);
+    expect(new Set(seed.clients.map((client) => client.phone)).size).toBe(360);
+    expect(new Set(seed.clients.map((client) => client.name)).size).toBe(360);
     expect(seed.credentials).toHaveLength(seed.users.length);
   });
 

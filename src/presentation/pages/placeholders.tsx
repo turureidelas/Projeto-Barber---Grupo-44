@@ -4,20 +4,8 @@ import { ptBR } from '../i18n/pt-BR';
 
 /**
  * Screens delivered in later phases. Each one moves to its own folder (pages/<screen>/)
- * when it is built: cadastros (phase 6), reports (7), settings (8).
+ * when it is built: reports (phase 7), settings (8).
  */
-
-export function ClientsPage() {
-  return <ComingSoon title={ptBR.pages.clients} />;
-}
-
-export function ServicesPage() {
-  return <ComingSoon title={ptBR.pages.services} />;
-}
-
-export function ProfessionalsPage() {
-  return <ComingSoon title={ptBR.pages.professionals} />;
-}
 
 export function ReportsPage() {
   const user = useCurrentUser();

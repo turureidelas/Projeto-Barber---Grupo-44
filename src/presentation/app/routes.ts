@@ -19,6 +19,7 @@ export const paths = {
   today: '/',
   week: '/semana',
   clients: '/clientes',
+  clientDetails: (clientId: string) => `/clientes/${clientId}`,
   services: '/servicos',
   professionals: '/equipe',
   reports: '/relatorios',

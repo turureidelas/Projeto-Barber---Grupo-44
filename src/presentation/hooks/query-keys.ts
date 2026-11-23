@@ -2,9 +2,15 @@
 export const queryKeys = {
   session: ['session'] as const,
   demoAccounts: ['demo', 'accounts'] as const,
-  professionals: ['catalog', 'professionals'] as const,
-  services: ['catalog', 'services'] as const,
-  clientSearch: (query: string) => ['catalog', 'clients', query] as const,
+  /** Prefix of every catalog query — invalidate it after any cadastro change. */
+  catalog: ['catalog'] as const,
+  professionals: (includeInactive = false) =>
+    ['catalog', 'professionals', includeInactive ? 'all' : 'active'] as const,
+  professional: (id: string) => ['catalog', 'professional', id] as const,
+  services: (includeInactive = false) =>
+    ['catalog', 'services', includeInactive ? 'all' : 'active'] as const,
+  clientSearch: (query: string, limit: number) => ['catalog', 'clients', query, limit] as const,
+  clientDetails: (id: string) => ['catalog', 'client', id] as const,
   /** Prefix of every agenda query — invalidate it after any appointment or block change. */
   agenda: ['agenda'] as const,
   dailyAgenda: (date: string, professionalId: string | null) =>
