@@ -42,7 +42,7 @@ describe('access control (RBAC)', () => {
   });
 
   it('lists the permissions of each role', () => {
-    expect(permissionsFor(owner)).toHaveLength(11);
+    expect(permissionsFor(owner)).toHaveLength(12);
     expect(permissionsFor(receptionist)).toEqual(['agenda:manage-all', 'clients:manage']);
   });
 

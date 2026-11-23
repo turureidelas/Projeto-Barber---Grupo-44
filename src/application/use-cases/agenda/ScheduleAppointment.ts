@@ -59,6 +59,7 @@ export class ScheduleAppointment implements UseCase<ScheduleAppointmentInput, Ap
     ]);
     if (!professional.active) throw new ResourceInactiveError('professional');
     if (!service.active) throw new ResourceInactiveError('service');
+    if (client.isAnonymized) throw new ResourceInactiveError('client');
 
     const now = this.deps.clock.now();
     const slot = TimeRange.startingAt(parseInstant('start', input.start), service.duration);

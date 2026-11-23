@@ -193,7 +193,7 @@ export function clientFromRow(row: ClientRow): Client {
     id: toId(row.id),
     barbershopId: toId(row.barbershopId),
     name: row.name,
-    phone: Phone.parse(row.phone),
+    phone: row.phone === null ? null : Phone.parse(row.phone),
     email: row.email === null ? null : Email.parse(row.email),
     consent: row.consent && {
       grantedAt: date('consent.grantedAt', row.consent.grantedAt),
@@ -201,6 +201,7 @@ export function clientFromRow(row: ClientRow): Client {
       channel: oneOf('consent.channel', row.consent.channel, CONSENT_CHANNELS),
     },
     createdAt: date('createdAt', row.createdAt),
+    anonymizedAt: row.anonymizedAt ? date('anonymizedAt', row.anonymizedAt) : null,
   });
 }
 
@@ -209,7 +210,7 @@ export function clientToRow(client: Client): ClientRow {
     id: client.id,
     barbershopId: client.barbershopId,
     name: client.name,
-    phone: client.phone.digits,
+    phone: client.phone?.digits ?? null,
     email: client.email?.value ?? null,
     consent: client.consent && {
       grantedAt: iso(client.consent.grantedAt),
@@ -217,6 +218,7 @@ export function clientToRow(client: Client): ClientRow {
       channel: client.consent.channel,
     },
     createdAt: iso(client.createdAt),
+    anonymizedAt: client.anonymizedAt && iso(client.anonymizedAt),
   };
 }
 

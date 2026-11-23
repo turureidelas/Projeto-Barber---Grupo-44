@@ -1,6 +1,6 @@
 import type { ClientDetailsDTO } from '@application/dto/catalog';
 import { formatDateTime, formatMoney, formatShortDate, isoToLocalDate } from '@shared/format';
-import { ArrowLeft, Pencil, Phone, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Pencil, Phone, ShieldAlert, ShieldCheck, Trash2, UserX } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { paths } from '../../app/routes';
@@ -8,6 +8,7 @@ import { StatusBadge } from '../../components/agenda/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { buttonClasses } from '../../components/ui/button-styles';
 import { Card } from '../../components/ui/Card';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ErrorState, LoadingState } from '../../components/ui/states';
 import { useCatalogMutations, useClientDetails } from '../../hooks/useCatalog';
@@ -44,10 +45,12 @@ function ClientRecord({ client }: { readonly client: ClientDetailsDTO }) {
   const user = useCurrentUser();
   const mutations = useCatalogMutations();
   const [editing, setEditing] = useState(false);
+  const [erasing, setErasing] = useState(false);
   const numbersId = useId();
   const historyId = useId();
   // Money spent is financial data: only for who sees the reports (not the reception).
   const canSeeMoney = user.permissions.includes('reports:view-all');
+  const canAnonymize = user.permissions.includes('clients:anonymize');
   const { stats } = client;
 
   const numbers = [
@@ -72,47 +75,33 @@ function ClientRecord({ client }: { readonly client: ClientDetailsDTO }) {
         title={client.name}
         subtitle={t.clientSince(formatShortDate(isoToLocalDate(client.createdAt)))}
         actions={
-          <Button
-            variant="secondary"
-            icon={Pencil}
-            onClick={() => {
-              setEditing(true);
-            }}
-          >
-            {ptBR.catalog.edit}
-          </Button>
+          client.phone !== null && (
+            <Button
+              variant="secondary"
+              icon={Pencil}
+              onClick={() => {
+                setEditing(true);
+              }}
+            >
+              {ptBR.catalog.edit}
+            </Button>
+          )
         }
       />
 
       <div className="flex flex-col gap-5">
-        <Card className="flex flex-col gap-3">
-          <h2 className="text-lg font-bold">{t.contact}</h2>
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xl font-semibold tabular-nums">{client.phone}</p>
-            <a
-              href={`tel:${client.phone.replace(/\D/g, '')}`}
-              className={buttonClasses({ variant: 'secondary' })}
-            >
-              <Phone aria-hidden="true" className="size-5" />
-              {t.call}
-            </a>
-          </div>
-          {client.email && <p>{client.email}</p>}
-          {client.consent ? (
-            <p className="flex items-center gap-2 text-success">
-              <ShieldCheck aria-hidden="true" className="size-5 shrink-0" />
-              {t.consentGiven(
-                formatShortDate(isoToLocalDate(client.consent.grantedAt)),
-                t.channels[client.consent.channel],
+        {client.phone === null ? (
+          <Card className="flex items-start gap-3">
+            <UserX aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-fg-muted" />
+            <p>
+              {t.anonymizedNotice(
+                formatShortDate(isoToLocalDate(client.anonymizedAt ?? client.createdAt)),
               )}
             </p>
-          ) : (
-            <p className="flex items-center gap-2 text-warning">
-              <ShieldAlert aria-hidden="true" className="size-5 shrink-0" />
-              {t.consentMissing}
-            </p>
-          )}
-        </Card>
+          </Card>
+        ) : (
+          <ContactCard client={client} phone={client.phone} />
+        )}
 
         <section aria-labelledby={numbersId}>
           <h2 id={numbersId} className="mb-2 text-lg font-bold">
@@ -162,7 +151,43 @@ function ClientRecord({ client }: { readonly client: ClientDetailsDTO }) {
             </ol>
           )}
         </section>
+
+        {canAnonymize && client.phone !== null && (
+          <Card className="flex flex-col gap-3 border-danger/40">
+            <h2 className="text-lg font-bold">{t.privacy}</h2>
+            <p className="text-fg-muted">{t.anonymizeBody}</p>
+            <Button
+              variant="danger"
+              icon={Trash2}
+              className="self-start"
+              onClick={() => {
+                setErasing(true);
+              }}
+            >
+              {t.anonymize}
+            </Button>
+          </Card>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={erasing}
+        title={t.anonymizeConfirmTitle(client.name)}
+        description={t.anonymizeConfirmBody}
+        confirmLabel={t.anonymizeConfirm}
+        variant="danger"
+        pending={mutations.anonymizeClient.isPending}
+        onClose={() => {
+          setErasing(false);
+        }}
+        onConfirm={() => {
+          mutations.anonymizeClient.mutate(client.id, {
+            onSuccess: () => {
+              setErasing(false);
+            },
+          });
+        }}
+      />
 
       <ClientFormDialog
         open={editing}
@@ -183,5 +208,44 @@ function ClientRecord({ client }: { readonly client: ClientDetailsDTO }) {
         }}
       />
     </>
+  );
+}
+
+function ContactCard({
+  client,
+  phone,
+}: {
+  readonly client: ClientDetailsDTO;
+  readonly phone: string;
+}) {
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-lg font-bold">{t.contact}</h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-xl font-semibold tabular-nums">{phone}</p>
+        <a
+          href={`tel:${phone.replace(/\D/g, '')}`}
+          className={buttonClasses({ variant: 'secondary' })}
+        >
+          <Phone aria-hidden="true" className="size-5" />
+          {t.call}
+        </a>
+      </div>
+      {client.email && <p>{client.email}</p>}
+      {client.consent ? (
+        <p className="flex items-center gap-2 text-success">
+          <ShieldCheck aria-hidden="true" className="size-5 shrink-0" />
+          {t.consentGiven(
+            formatShortDate(isoToLocalDate(client.consent.grantedAt)),
+            t.channels[client.consent.channel],
+          )}
+        </p>
+      ) : (
+        <p className="flex items-center gap-2 text-warning">
+          <ShieldAlert aria-hidden="true" className="size-5 shrink-0" />
+          {t.consentMissing}
+        </p>
+      )}
+    </Card>
   );
 }

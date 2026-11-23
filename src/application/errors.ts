@@ -59,12 +59,12 @@ export class InvalidCredentialsError extends ApplicationError {
   }
 }
 
-/** Tried to book with a professional or service that was deactivated. */
+/** Tried to book with a professional or service that was deactivated, or an anonymized client. */
 export class ResourceInactiveError extends ApplicationError {
   readonly code = 'RESOURCE_INACTIVE';
-  readonly resource: 'professional' | 'service';
+  readonly resource: 'professional' | 'service' | 'client';
 
-  constructor(resource: 'professional' | 'service') {
+  constructor(resource: 'professional' | 'service' | 'client') {
     super(`This ${resource} is inactive.`);
     this.resource = resource;
   }

@@ -106,6 +106,7 @@ describe('catalog', () => {
         name: 'Maria Antônia',
         phoneMasked: '(11) *****-5678',
         emailMasked: null,
+        anonymized: false,
       },
     ]);
     await expect(search('98765')).resolves.toMatchObject([

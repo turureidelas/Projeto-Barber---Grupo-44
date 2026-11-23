@@ -171,6 +171,14 @@ export function useCatalogMutations() {
       onSuccess: saved,
       onError: fail,
     }),
+    anonymizeClient: useMutation({
+      mutationFn: (clientId: string) => catalog.anonymizeClient.execute({ clientId }),
+      onSuccess: async (result) => {
+        toast.success(ptBR.clients.anonymized(result.cancelledAppointments));
+        await refresh();
+      },
+      onError: fail,
+    }),
   };
 }
 

@@ -143,6 +143,8 @@ export class InMemoryClientRepository implements ClientRepository {
     const matches = await this.table.where(
       (row) =>
         row.barbershopId === barbershopId &&
+        // Anonymized clients can't be found (nor booked) anymore.
+        row.phone !== null &&
         (normalizeForSearch(row.name).includes(text) ||
           (digits.length >= 3 && row.phone.includes(digits))),
     );

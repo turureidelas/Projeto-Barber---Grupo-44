@@ -52,9 +52,11 @@ import {
   type SearchClientsInput,
 } from './catalog/catalog-use-cases';
 import {
+  AnonymizeClient,
   CreateClient,
   GetClientDetails,
   UpdateClient,
+  type AnonymizeClientResult,
   type CreateClientInput,
   type UpdateClientInput,
 } from './catalog/client-management';
@@ -138,6 +140,7 @@ export interface UseCases {
     readonly createClient: UseCase<CreateClientInput, ClientSummaryDTO>;
     readonly updateClient: UseCase<UpdateClientInput, ClientSummaryDTO>;
     readonly getClientDetails: UseCase<{ clientId: string }, ClientDetailsDTO>;
+    readonly anonymizeClient: UseCase<{ clientId: string }, AnonymizeClientResult>;
   };
   readonly reports: {
     readonly getReport: UseCase<GetReportInput, ReportDTO>;
@@ -198,6 +201,7 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
       createClient: new CreateClient(deps),
       updateClient: new UpdateClient(deps),
       getClientDetails: new GetClientDetails(deps),
+      anonymizeClient: new AnonymizeClient(deps),
     },
     reports: {
       getReport: new GetReport(deps),
@@ -243,6 +247,7 @@ export type {
 } from './demo/client-simulator';
 export type { ListInput, SearchClientsInput } from './catalog/catalog-use-cases';
 export type {
+  AnonymizeClientResult,
   CreateClientInput,
   UpdateClientInput,
   ClientInput,

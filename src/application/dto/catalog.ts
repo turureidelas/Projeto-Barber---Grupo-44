@@ -51,8 +51,11 @@ export interface ServiceDTO {
 export interface ClientSummaryDTO {
   readonly id: string;
   readonly name: string;
-  readonly phoneMasked: string;
+  /** null once anonymized. */
+  readonly phoneMasked: string | null;
   readonly emailMasked: string | null;
+  /** Personal data erased at the client's request (LGPD). */
+  readonly anonymized: boolean;
 }
 
 export interface ClientStatsDTO {
@@ -69,8 +72,8 @@ export interface ClientStatsDTO {
 export interface ClientDetailsDTO {
   readonly id: string;
   readonly name: string;
-  /** Formatted, e.g. "(11) 98765-4321". */
-  readonly phone: string;
+  /** Formatted, e.g. "(11) 98765-4321"; null once anonymized. */
+  readonly phone: string | null;
   readonly email: string | null;
   readonly consent: {
     readonly grantedAt: string;
@@ -78,6 +81,8 @@ export interface ClientDetailsDTO {
     readonly channel: 'APP' | 'PANEL';
   } | null;
   readonly createdAt: string;
+  /** When the personal data was erased (LGPD); null while identifiable. */
+  readonly anonymizedAt: string | null;
   readonly stats: ClientStatsDTO;
   /** Most recent first. */
   readonly history: readonly AppointmentDTO[];

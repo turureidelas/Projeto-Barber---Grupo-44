@@ -10,6 +10,8 @@ export const PERMISSIONS = [
   'time-blocks:manage-all',
   'time-blocks:manage-own',
   'clients:manage',
+  /** Erase a client's personal data at their request (LGPD). Owner only. */
+  'clients:anonymize',
   'services:manage',
   'professionals:manage',
   'schedules:manage',

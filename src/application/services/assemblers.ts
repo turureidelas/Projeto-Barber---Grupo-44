@@ -77,7 +77,7 @@ function toAppointmentDTO(appointment: Appointment, lookups: AppointmentLookups)
     professionalName: professional.name,
     clientId: client.id,
     clientName: client.name,
-    clientPhoneMasked: client.phone.masked(),
+    clientPhoneMasked: client.phone?.masked() ?? null,
     serviceId: service.id,
     serviceName: service.name,
     start: appointment.start.toISOString(),
@@ -165,8 +165,9 @@ export function toClientSummaryDTO(client: Client): ClientSummaryDTO {
   return {
     id: client.id,
     name: client.name,
-    phoneMasked: client.phone.masked(),
+    phoneMasked: client.phone?.masked() ?? null,
     emailMasked: client.email?.masked() ?? null,
+    anonymized: client.isAnonymized,
   };
 }
 

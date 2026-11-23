@@ -8,7 +8,7 @@ import { Phone } from '../value-objects/Phone';
 import { TimeRange } from '../value-objects/TimeRange';
 import { WorkSchedule } from '../value-objects/WorkSchedule';
 import { Barbershop } from './Barbershop';
-import { Client } from './Client';
+import { ANONYMIZED_CLIENT_NAME, Client } from './Client';
 import { toId, type TimeBlockId, type UserId } from './ids';
 import { Professional } from './Professional';
 import { TimeBlock } from './TimeBlock';
@@ -88,6 +88,39 @@ describe('Client', () => {
     expect(() =>
       joao.grantConsent({ grantedAt: at('08:00'), termsVersion: '', channel: 'APP' }),
     ).toThrow(InvalidValueError);
+  });
+
+  it('requires a phone while the client is identifiable', () => {
+    expect(() => Client.create({ ...joao.toProps(), phone: null })).toThrow(/phone/);
+  });
+
+  it('erases the personal data for good at the client request (LGPD)', () => {
+    const consented = joao
+      .update({ email: Email.parse('joao@email.com') })
+      .grantConsent({ grantedAt: at('08:00'), termsVersion: 'v1', channel: 'APP' });
+    const anonymized = consented.anonymize(at('09:00'));
+
+    expect(anonymized.toProps()).toEqual({
+      id: ids.client,
+      barbershopId: ids.shop,
+      name: ANONYMIZED_CLIENT_NAME,
+      phone: null,
+      email: null,
+      consent: null,
+      createdAt: at('08:00'),
+      anonymizedAt: at('09:00'),
+    });
+    expect(anonymized.isAnonymized).toBe(true);
+    expect(joao.isAnonymized).toBe(false);
+
+    expect(() => anonymized.anonymize(at('10:00'))).toThrow(/anonymized/);
+    expect(() => anonymized.update({ name: 'João' })).toThrow(/anonymized/);
+    expect(() =>
+      anonymized.grantConsent({ grantedAt: at('10:00'), termsVersion: 'v1', channel: 'APP' }),
+    ).toThrow(/anonymized/);
+    expect(() =>
+      Client.create({ ...anonymized.toProps(), phone: Phone.parse('(11) 98765-4321') }),
+    ).toThrow(/no contact data/);
   });
 });
 

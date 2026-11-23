@@ -371,6 +371,22 @@ export const ptBR = {
     history: 'Histórico',
     noHistory: 'Ainda não há atendimentos.',
     clientSince: (date: string) => `Cliente desde ${date}`,
+    privacy: 'Privacidade (LGPD)',
+    anonymizeBody:
+      'Se o cliente pedir para apagar os dados dele, use esta opção. O nome, o telefone e o e-mail são apagados de vez. Os atendimentos continuam nos números da barbearia, sem identificar a pessoa.',
+    anonymize: 'Apagar dados do cliente',
+    anonymizeConfirmTitle: (name: string) => `Apagar os dados de ${name}?`,
+    anonymizeConfirmBody:
+      'Isso não pode ser desfeito. Os agendamentos futuros desse cliente serão cancelados e os horários ficam livres.',
+    anonymizeConfirm: 'Apagar dados',
+    anonymized: (cancelled: number) =>
+      cancelled === 0
+        ? 'Dados do cliente apagados.'
+        : cancelled === 1
+          ? 'Dados do cliente apagados. 1 agendamento futuro foi cancelado.'
+          : `Dados do cliente apagados. ${String(cancelled)} agendamentos futuros foram cancelados.`,
+    anonymizedNotice: (date: string) =>
+      `Os dados pessoais deste cliente foram apagados a pedido dele em ${date}. O histórico fica só para os números da barbearia.`,
   },
 
   reports: {
@@ -546,7 +562,7 @@ export const ptBR = {
     NOT_FOUND: 'Não encontramos esse item. Atualize a tela.',
     NOT_AUTHENTICATED: 'Sua sessão terminou. Entre de novo.',
     INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
-    RESOURCE_INACTIVE: 'Esse serviço ou profissional está desativado.',
+    RESOURCE_INACTIVE: 'Esse serviço, profissional ou cliente não está mais disponível.',
     ALREADY_EXISTS: 'Já existe um cliente com esse telefone.',
     UNEXPECTED: 'Algo deu errado. Tente de novo.',
   } satisfies Record<ErrorCode, string>,

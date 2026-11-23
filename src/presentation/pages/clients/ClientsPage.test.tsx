@@ -111,4 +111,28 @@ describe('ClientsPage', () => {
     expect(await within(dialog).findByText('(11) *****-5555')).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Trocar cliente' })).toBeInTheDocument();
   });
+
+  it('erases the client data at their request, after confirmation (owner only)', async () => {
+    const { user } = await renderApp({ as: 'owner', route: `/clientes/${fixture.joao}` });
+
+    await user.click(await screen.findByRole('button', { name: 'Apagar dados do cliente' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Apagar os dados de João Pedro?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Apagar dados' }));
+
+    expect(await screen.findByText('Dados do cliente apagados.')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Cliente anonimizado' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/foram apagados a pedido dele em 18\/11/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ligar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+  });
+
+  it('does not offer erasing data to the reception', async () => {
+    await renderApp({ as: 'receptionist', route: `/clientes/${fixture.joao}` });
+    await screen.findByRole('heading', { level: 1, name: 'João Pedro' });
+    expect(
+      screen.queryByRole('button', { name: 'Apagar dados do cliente' }),
+    ).not.toBeInTheDocument();
+  });
 });

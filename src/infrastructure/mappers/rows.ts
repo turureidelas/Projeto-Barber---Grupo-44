@@ -52,10 +52,13 @@ export interface ClientRow {
   id: string;
   barbershopId: string;
   name: string;
-  phone: string;
+  /** null once anonymized. */
+  phone: string | null;
   email: string | null;
   consent: { grantedAt: string; termsVersion: string; channel: string } | null;
   createdAt: string;
+  /** Optional: rows saved before anonymization existed don't have it. */
+  anonymizedAt?: string | null;
 }
 
 export interface AppointmentRow {

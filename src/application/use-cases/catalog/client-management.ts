@@ -138,7 +138,7 @@ export class GetClientDetails implements UseCase<{ clientId: string }, ClientDet
     return {
       id: client.id,
       name: client.name,
-      phone: client.phone.formatted(),
+      phone: client.phone?.formatted() ?? null,
       email: client.email?.value ?? null,
       consent: client.consent && {
         grantedAt: client.consent.grantedAt.toISOString(),
@@ -146,6 +146,7 @@ export class GetClientDetails implements UseCase<{ clientId: string }, ClientDet
         channel: client.consent.channel,
       },
       createdAt: client.createdAt.toISOString(),
+      anonymizedAt: client.anonymizedAt?.toISOString() ?? null,
       stats: {
         visits: summary.visits,
         noShows: summary.noShows,
@@ -156,5 +157,60 @@ export class GetClientDetails implements UseCase<{ clientId: string }, ClientDet
       },
       history: history.reverse(),
     };
+  }
+}
+
+/** Recorded on the bookings cancelled because the client asked to erase their data. */
+export const ANONYMIZATION_CANCEL_REASON = 'Dados do cliente apagados a pedido dele (LGPD)';
+
+export interface AnonymizeClientResult {
+  readonly client: ClientSummaryDTO;
+  /** Upcoming bookings that were cancelled (their times are free again). */
+  readonly cancelledAppointments: number;
+}
+
+type AnonymizeDeps = Pick<
+  ApplicationDependencies,
+  'auth' | 'users' | 'clock' | 'barbershops' | 'clients' | 'appointments'
+>;
+
+/**
+ * LGPD right to erasure ("anonimizar cliente"), owner only. Name, phone, e-mail and consent
+ * are erased; past appointments stay (without identifying anyone) so the reports keep adding
+ * up; upcoming bookings are cancelled. Cannot be undone.
+ */
+export class AnonymizeClient implements UseCase<{ clientId: string }, AnonymizeClientResult> {
+  private readonly deps: AnonymizeDeps;
+
+  constructor(deps: AnonymizeDeps) {
+    this.deps = deps;
+  }
+
+  async execute(input: { clientId: string }): Promise<AnonymizeClientResult> {
+    const actor = await requireActor(this.deps);
+    assertPermission(actor, 'clients:anonymize');
+    const client = await requireClient(this.deps, actor, input.clientId);
+    const barbershop = await requireBarbershop(this.deps, actor);
+    const now = this.deps.clock.now();
+
+    const upcoming = (await this.deps.appointments.listByClient(client.id)).filter(
+      (appointment) =>
+        (appointment.status === 'SCHEDULED' || appointment.status === 'CONFIRMED') &&
+        appointment.start.getTime() > now.getTime(),
+    );
+    for (const appointment of upcoming) {
+      await this.deps.appointments.save(
+        appointment.cancel({
+          by: 'STAFF',
+          reason: ANONYMIZATION_CANCEL_REASON,
+          now,
+          policy: barbershop.cancellationPolicy,
+        }),
+      );
+    }
+
+    const anonymized = client.anonymize(now);
+    await this.deps.clients.save(anonymized);
+    return { client: toClientSummaryDTO(anonymized), cancelledAppointments: upcoming.length };
   }
 }

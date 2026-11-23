@@ -12,8 +12,8 @@ export interface AppointmentDTO {
   readonly professionalName: string;
   readonly clientId: string;
   readonly clientName: string;
-  /** LGPD: masked, e.g. "(11) *****-4321". */
-  readonly clientPhoneMasked: string;
+  /** LGPD: masked, e.g. "(11) *****-4321"; null once the client was anonymized. */
+  readonly clientPhoneMasked: string | null;
   readonly serviceId: string;
   readonly serviceName: string;
   readonly start: string;
