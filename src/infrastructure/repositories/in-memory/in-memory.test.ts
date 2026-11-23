@@ -4,7 +4,10 @@ import { InMemoryAuthGateway } from '@infrastructure/auth/InMemoryAuthGateway';
 import { MemoryStorage } from '@infrastructure/storage/KeyValueStorage';
 import { describe, expect, it } from 'vitest';
 import { emptySnapshot, InMemoryDatabase } from './InMemoryDatabase';
-import { InMemoryTimeBlockRepository } from './in-memory-repositories';
+import {
+  InMemoryNotificationRepository,
+  InMemoryTimeBlockRepository,
+} from './in-memory-repositories';
 import { createDemoSeed } from './seed/demo-seed';
 
 const KEY = InMemoryDatabase.DEFAULT_STORAGE_KEY;
@@ -33,6 +36,31 @@ describe('InMemoryDatabase', () => {
     const storage = new MemoryStorage();
     storage.setItem(KEY, raw);
     expect(new InMemoryDatabase({ storage }).isEmpty()).toBe(true);
+  });
+
+  it('keeps a database saved before the notices existed, adding the new table', async () => {
+    const storage = new MemoryStorage();
+    const older: Partial<ReturnType<typeof createDemoSeed>> = createDemoSeed(at('10:00'));
+    delete older.notifications;
+    storage.setItem(KEY, JSON.stringify(older));
+
+    const db = new InMemoryDatabase({ storage });
+    expect(db.isEmpty()).toBe(false);
+    expect(await db.all('notifications')).toEqual([]);
+  });
+
+  it('lists the newest notices first', async () => {
+    const db = new InMemoryDatabase({ storage: null });
+    db.replaceAll(createDemoSeed(at('10:00')));
+    const notifications = new InMemoryNotificationRepository(db);
+
+    const recent = await notifications.listRecent(toId('shop-nova-era'), 2);
+    expect(recent.map((notification) => notification.id)).toEqual(['notif-0001', 'notif-0002']);
+    const [newest] = recent;
+    if (!newest) throw new Error('no notices');
+    await notifications.save(newest.markReadBy(toId('user-ricardo')));
+    expect((await notifications.findById(toId('notif-0001')))?.readBy).toEqual(['user-ricardo']);
+    expect(await notifications.listRecent(toId('other-shop'), 5)).toEqual([]);
   });
 
   it('works without storage and returns copies of its tables', async () => {

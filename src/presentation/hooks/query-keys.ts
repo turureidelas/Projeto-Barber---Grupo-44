@@ -7,6 +7,8 @@ export const queryKeys = {
   professionals: (includeInactive = false) =>
     ['catalog', 'professionals', includeInactive ? 'all' : 'active'] as const,
   professional: (id: string) => ['catalog', 'professional', id] as const,
+  barbershop: ['catalog', 'barbershop'] as const,
+  notifications: ['notifications'] as const,
   services: (includeInactive = false) =>
     ['catalog', 'services', includeInactive ? 'all' : 'active'] as const,
   clientSearch: (query: string, limit: number) => ['catalog', 'clients', query, limit] as const,

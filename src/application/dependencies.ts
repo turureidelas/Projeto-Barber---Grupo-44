@@ -7,6 +7,7 @@ import type {
   AppointmentRepository,
   BarbershopRepository,
   ClientRepository,
+  NotificationRepository,
   ProfessionalRepository,
   ServiceRepository,
   TimeBlockRepository,
@@ -29,6 +30,7 @@ export interface ApplicationDependencies {
   readonly clients: ClientRepository;
   readonly appointments: AppointmentRepository;
   readonly timeBlocks: TimeBlockRepository;
+  readonly notifications: NotificationRepository;
   /** null when running against the real API. */
   readonly demoData: DemoDataGateway | null;
 }

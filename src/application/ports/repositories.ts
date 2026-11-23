@@ -1,10 +1,12 @@
 import type { Appointment } from '@domain/entities/Appointment';
 import type { Barbershop } from '@domain/entities/Barbershop';
 import type { Client } from '@domain/entities/Client';
+import type { Notification } from '@domain/entities/Notification';
 import type {
   AppointmentId,
   BarbershopId,
   ClientId,
+  NotificationId,
   ProfessionalId,
   ServiceId,
   TimeBlockId,
@@ -74,4 +76,11 @@ export interface TimeBlockRepository {
   listInRange(query: RangeQuery): Promise<TimeBlock[]>;
   save(timeBlock: TimeBlock): Promise<void>;
   delete(id: TimeBlockId): Promise<void>;
+}
+
+export interface NotificationRepository {
+  findById(id: NotificationId): Promise<Notification | null>;
+  /** Newest first, at most `limit`. */
+  listRecent(barbershopId: BarbershopId, limit: number): Promise<Notification[]>;
+  save(notification: Notification): Promise<void>;
 }

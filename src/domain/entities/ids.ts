@@ -15,6 +15,7 @@ export type ServiceId = Id<'Service'>;
 export type ClientId = Id<'Client'>;
 export type AppointmentId = Id<'Appointment'>;
 export type TimeBlockId = Id<'TimeBlock'>;
+export type NotificationId = Id<'Notification'>;
 
 // The caller picks the ID kind explicitly: toId<ClientId>(raw).
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters

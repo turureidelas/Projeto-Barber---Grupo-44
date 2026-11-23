@@ -115,7 +115,9 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
   - Caso de uso `GetReport({ from, to, professionalId? })` → `ReportDTO` (centavos, percentuais inteiros ou `null`). Gestor: barbearia toda (`scope: 'BARBERSHOP'`) ou um profissional; profissional: sempre os próprios números, ignorando o `professionalId` enviado; recepção: `PERMISSION_DENIED`. Profissional inativo só aparece se teve agendamento no período.
   - URL: `?periodo=hoje|semana|mes|datas&de=yyyy-MM-dd&ate=yyyy-MM-dd` (padrão: semana). "Esta semana" e "Este mês" vão **até hoje** (o futuro não dilui os números). Lógica em `pages/reports/period.ts`.
   - Gráficos feitos à mão em `components/reports/charts.tsx` (`Meter`, `BarList` em SVG decorativo; o valor sempre aparece como texto). Chave de cache `queryKeys.report` fica sob o prefixo `agenda`, então qualquer mudança de agendamento atualiza os números.
-- A tela da fase 8 (configurações) ainda é placeholder em `pages/placeholders.tsx`; ganha sua pasta quando for construída.
+- **Configurações** (`pages/settings`, só gestor — `settings:manage`): "Dados da barbearia" (`UpdateBarbershop`: nome, telefone, endereço opcional) e "Política de cancelamento" (`UpdateCancellationPolicy`: antecedência 0–168 h, tolerância de falta 0–120 min). A nova política vale para os prazos calculados dali em diante (`changeDeadline`/`noShowAllowedFrom` dos DTOs). No modo demo a tela também tem o simulador do cliente e o "Resetar dados".
+- **Avisos (notificações)**: entidade `Notification` (`APPOINTMENT_CANCELLED` | `APPOINTMENT_RESCHEDULED`, horário anterior, novo horário, `readBy` — lido **por pessoa**). Porta `NotificationRepository` (`listRecent`), tabela `notifications` no mock (banco salvo antes dela é atualizado com a tabela vazia, não apagado). Casos de uso `notifications.list` / `markRead` / `markAllRead`; cada pessoa vê os avisos das agendas que pode gerenciar (`canManageAgendaOf`). Sino com contador no cabeçalho (`components/notifications/NotificationBell`, consulta a cada 30 s); aparece no menu lateral e na barra do celular (duas instâncias, o CSS mostra uma).
+- **Ações do cliente**: só os casos de uso "como cliente" geram aviso (`by: 'CLIENT'`, respeitam a antecedência → `LATE_CHANGE_NOT_ALLOWED`); cancelar/remarcar pela equipe não gera aviso. Como o app do cliente ainda não existe, ficam em `demo.simulateClientCancel` / `demo.simulateClientReschedule` (`use-cases/demo/client-simulator.ts`, `null` fora do mock) e a UI é o `ClientSimulator` (mesmo profissional, só horários livres). Remarcar (equipe ou cliente) passa por `services/appointment-changes.ts` (`moveAppointment`). O seed começa com 3 avisos não lidos (cancelamentos de clientes mais próximos).
 
 ### LGPD
 
@@ -182,4 +184,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios ✅ · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios ✅ · 8. Configurações + notificações ✅ · 9. Polimento

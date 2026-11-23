@@ -5,6 +5,7 @@ import { useIsDemo } from '../../hooks/useDemo';
 import { useCurrentUser } from '../../hooks/useSession';
 import { ptBR } from '../../i18n/pt-BR';
 import { ResetDemoButton } from '../demo/ResetDemoButton';
+import { NotificationBell } from '../notifications/NotificationBell';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { cx } from '../ui/cx';
@@ -36,7 +37,10 @@ export function AppShell() {
       <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col border-r border-line bg-surface p-4 lg:flex">
         <div className="flex items-center justify-between gap-2 px-2 pb-6">
           <Brand />
-          {isDemo && <Badge tone="accent">Demo</Badge>}
+          <div className="flex items-center gap-1">
+            {isDemo && <Badge tone="accent">Demo</Badge>}
+            <NotificationBell className="-mr-2" />
+          </div>
         </div>
         <nav aria-label={ptBR.nav.label} className="flex-1">
           <ul className="flex flex-col gap-1">
@@ -58,7 +62,10 @@ export function AppShell() {
         {/* Phone top bar */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur lg:hidden">
           <Brand />
-          <Avatar name={user.name} size="sm" />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Avatar name={user.name} size="sm" />
+          </div>
         </header>
 
         <main

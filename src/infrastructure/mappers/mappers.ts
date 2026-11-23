@@ -6,6 +6,7 @@ import { toId } from '@domain/entities/ids';
 import { Professional } from '@domain/entities/Professional';
 import { Service, SERVICE_KINDS } from '@domain/entities/Service';
 import { TimeBlock } from '@domain/entities/TimeBlock';
+import { NOTIFICATION_KINDS, Notification } from '@domain/entities/Notification';
 import { ROLES, User } from '@domain/entities/User';
 import { InvalidValueError } from '@domain/errors/DomainError';
 import { requireValidDate } from '@domain/shared/guards';
@@ -23,6 +24,7 @@ import type {
   AppointmentRow,
   BarbershopRow,
   ClientRow,
+  NotificationRow,
   ProfessionalRow,
   ServiceRow,
   TimeBlockRow,
@@ -299,5 +301,39 @@ export function timeBlockToRow(block: TimeBlock): TimeBlockRow {
     reason: block.reason,
     createdBy: block.createdBy,
     createdAt: iso(block.createdAt),
+  };
+}
+
+// Notification
+
+export function notificationFromRow(row: NotificationRow): Notification {
+  return Notification.restore({
+    id: toId(row.id),
+    barbershopId: toId(row.barbershopId),
+    kind: oneOf('notificationKind', row.kind, NOTIFICATION_KINDS),
+    appointmentId: toId(row.appointmentId),
+    professionalId: toId(row.professionalId),
+    clientId: toId(row.clientId),
+    serviceId: toId(row.serviceId),
+    previousStart: date('previousStart', row.previousStart),
+    newStart: row.newStart === null ? null : date('newStart', row.newStart),
+    createdAt: date('createdAt', row.createdAt),
+    readBy: row.readBy.map((userId) => toId(userId)),
+  });
+}
+
+export function notificationToRow(notification: Notification): NotificationRow {
+  return {
+    id: notification.id,
+    barbershopId: notification.barbershopId,
+    kind: notification.kind,
+    appointmentId: notification.appointmentId,
+    professionalId: notification.professionalId,
+    clientId: notification.clientId,
+    serviceId: notification.serviceId,
+    previousStart: iso(notification.previousStart),
+    newStart: notification.newStart && iso(notification.newStart),
+    createdAt: iso(notification.createdAt),
+    readBy: [...notification.readBy],
   };
 }

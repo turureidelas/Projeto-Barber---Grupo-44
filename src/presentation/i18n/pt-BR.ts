@@ -438,6 +438,71 @@ export const ptBR = {
       `${amount} · ${count === 1 ? '1 atendimento' : `${String(count)} atendimentos`}`,
   },
 
+  settings: {
+    title: 'Configurações',
+    subtitle: 'Dados da barbearia e regras de cancelamento.',
+    shopTitle: 'Dados da barbearia',
+    shopName: 'Nome da barbearia',
+    shopPhone: 'Telefone com DDD',
+    shopAddress: 'Endereço',
+    shopAddressHint: 'Opcional. Aparece para o cliente no app.',
+    nameRequired: 'Digite o nome da barbearia.',
+    phoneInvalid: 'Digite o telefone com DDD, por exemplo (11) 3456-7890.',
+    shopSaved: 'Dados da barbearia salvos.',
+    policyTitle: 'Política de cancelamento',
+    policyBody:
+      'Vale para o cliente no app. A equipe pode cancelar fora do prazo, mas precisa escrever o motivo.',
+    minNotice: 'Antecedência mínima para cancelar ou remarcar (horas)',
+    minNoticeHint: 'Ex.: 2 = o cliente pode cancelar até 2 horas antes.',
+    minNoticeInvalid: 'Digite um número de 0 a 168 horas.',
+    noShowTolerance: 'Tolerância antes de marcar falta (minutos)',
+    noShowToleranceHint: 'Quanto tempo esperar depois do horário antes de marcar "Cliente faltou".',
+    noShowToleranceInvalid: 'Digite um número de 0 a 120 minutos.',
+    policySaved: 'Política de cancelamento salva.',
+    save: 'Salvar',
+  },
+
+  notifications: {
+    open: (unread: number) =>
+      unread === 0
+        ? 'Avisos'
+        : unread === 1
+          ? 'Avisos, 1 não lido'
+          : `Avisos, ${String(unread)} não lidos`,
+    title: 'Avisos',
+    description: 'Cancelamentos e remarcações feitos pelos clientes no app.',
+    empty: 'Nenhum aviso por enquanto.',
+    cancelled: (client: string) => `${client} cancelou`,
+    rescheduled: (client: string) => `${client} remarcou`,
+    cancelledBody: (service: string, professional: string, when: string) =>
+      `${service} com ${professional}, ${when}. O horário ficou livre.`,
+    rescheduledBody: (service: string, professional: string, from: string, to: string) =>
+      `${service} com ${professional}: de ${from} para ${to}. O horário antigo ficou livre.`,
+    receivedAt: (when: string) => `Recebido ${when}`,
+    unread: 'Não lido',
+    markRead: 'Marcar como lido',
+    markAllRead: 'Marcar todos como lidos',
+  },
+
+  simulator: {
+    title: 'Simular ações do cliente',
+    body: 'O app do cliente ainda não existe. Aqui você faz o que o cliente faria nele e vê o aviso chegar no sino.',
+    policy: (hours: number) =>
+      `Regra atual: o cliente só pode cancelar ou remarcar até ${String(hours)}h antes.`,
+    date: 'Dia',
+    listLabel: 'Agendamentos que o cliente pode mudar',
+    empty: 'Nenhum agendamento futuro neste dia.',
+    late: 'Fora do prazo',
+    cancel: 'Cliente cancelou',
+    reschedule: 'Cliente remarcou',
+    cancelLabel: (client: string, when: string) => `${client} cancela o horário de ${when}`,
+    rescheduleLabel: (client: string, when: string) => `${client} remarca o horário de ${when}`,
+    cancelled: (client: string) => `${client} cancelou pelo app. Veja o aviso no sino.`,
+    rescheduled: (client: string, when: string) =>
+      `${client} remarcou para ${when}. Veja o aviso no sino.`,
+    demoTitle: 'Demonstração',
+  },
+
   common: {
     loading: 'Carregando…',
     retry: 'Tentar de novo',
@@ -445,8 +510,6 @@ export const ptBR = {
     confirm: 'Confirmar',
     close: 'Fechar',
     back: 'Voltar',
-    comingSoon: 'Em construção',
-    comingSoonBody: 'Esta tela chega numa próxima etapa do projeto.',
   },
 
   pages: {

@@ -16,12 +16,25 @@ describe('row ⇄ entity mappers', () => {
     ['clients', seed.clients, map.clientFromRow, map.clientToRow],
     ['appointments', seed.appointments, map.appointmentFromRow, map.appointmentToRow],
     ['timeBlocks', seed.timeBlocks, map.timeBlockFromRow, map.timeBlockToRow],
+    ['notifications', seed.notifications, map.notificationFromRow, map.notificationToRow],
   ] as const)('round-trips %s without losing data', (_table, rows, fromRow, toRow) => {
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) {
       // @ts-expect-error — each tuple pairs rows with their own mappers; the union confuses TS.
       expect(toRow(fromRow(row))).toEqual(row);
     }
+  });
+
+  it('round-trips a reschedule notice with its new start', () => {
+    const [notice] = seed.notifications;
+    if (!notice) throw new Error('seed is empty');
+    const row = {
+      ...notice,
+      kind: 'APPOINTMENT_RESCHEDULED',
+      newStart: '2026-11-20T13:00:00.000Z',
+    };
+    expect(map.notificationToRow(map.notificationFromRow(row))).toEqual(row);
+    expect(() => map.notificationFromRow({ ...notice, kind: 'MOVED' })).toThrow(InvalidValueError);
   });
 
   it('rejects unknown enum values from storage', () => {

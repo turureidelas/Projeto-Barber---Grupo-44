@@ -88,3 +88,17 @@ export interface TimeBlockRow {
   createdBy: string;
   createdAt: string;
 }
+
+export interface NotificationRow {
+  id: string;
+  barbershopId: string;
+  kind: string;
+  appointmentId: string;
+  professionalId: string;
+  clientId: string;
+  serviceId: string;
+  previousStart: string;
+  newStart: string | null;
+  createdAt: string;
+  readBy: string[];
+}

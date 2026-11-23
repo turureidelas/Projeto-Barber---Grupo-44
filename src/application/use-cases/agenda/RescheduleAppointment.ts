@@ -3,7 +3,7 @@ import type { ApplicationDependencies } from '../../dependencies';
 import type { AppointmentDTO } from '../../dto/agenda';
 import { ResourceInactiveError } from '../../errors';
 import { requireActor } from '../../services/actor';
-import { loadProfessionalAgenda } from '../../services/agenda-loader';
+import { moveAppointment } from '../../services/appointment-changes';
 import { assembleAppointment } from '../../services/assemblers';
 import { parseInstant } from '../../services/inputs';
 import { requireAppointment, requireBarbershop, requireProfessional } from '../../services/lookups';
@@ -53,22 +53,14 @@ export class RescheduleAppointment implements UseCase<RescheduleAppointmentInput
     if (!target.active) throw new ResourceInactiveError('professional');
 
     const barbershop = await requireBarbershop(this.deps, actor);
-    const now = this.deps.clock.now();
-    const moved = appointment.reschedule({
+    const moved = await moveAppointment(this.deps, {
+      appointment,
+      target,
       start: parseInstant('start', input.start),
-      professionalId: target.id,
       by: 'STAFF',
-      now,
+      now: this.deps.clock.now(),
       policy: barbershop.cancellationPolicy,
     });
-
-    const agenda = await loadProfessionalAgenda(this.deps, target, moved.range);
-    this.deps.availability.assertSlotAvailable(agenda, moved.range, {
-      now,
-      ignoreAppointmentId: appointment.id,
-    });
-
-    await this.deps.appointments.save(moved);
     return assembleAppointment(this.deps, barbershop, moved);
   }
 }

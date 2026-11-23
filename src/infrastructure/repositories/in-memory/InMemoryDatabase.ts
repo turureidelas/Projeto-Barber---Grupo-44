@@ -2,6 +2,7 @@ import type {
   AppointmentRow,
   BarbershopRow,
   ClientRow,
+  NotificationRow,
   ProfessionalRow,
   ServiceRow,
   TimeBlockRow,
@@ -25,6 +26,7 @@ export interface DatabaseSnapshot {
   clients: ClientRow[];
   appointments: AppointmentRow[];
   timeBlocks: TimeBlockRow[];
+  notifications: NotificationRow[];
 }
 
 export type TableName = Exclude<keyof DatabaseSnapshot, 'version'>;
@@ -40,7 +42,10 @@ const TABLES: readonly TableName[] = [
   'clients',
   'appointments',
   'timeBlocks',
+  'notifications',
 ];
+/** Tables added after v1: a stored database without them is upgraded, not thrown away. */
+const LATER_TABLES: readonly TableName[] = ['notifications'];
 
 export function emptySnapshot(): DatabaseSnapshot {
   return {
@@ -53,6 +58,7 @@ export function emptySnapshot(): DatabaseSnapshot {
     clients: [],
     appointments: [],
     timeBlocks: [],
+    notifications: [],
   };
 }
 
@@ -123,7 +129,11 @@ export class InMemoryDatabase {
     const raw = this.storage?.getItem(this.storageKey);
     if (!raw) return emptySnapshot();
     try {
-      const parsed = JSON.parse(raw) as Partial<DatabaseSnapshot>;
+      const stored = JSON.parse(raw) as Partial<DatabaseSnapshot>;
+      const parsed: Partial<DatabaseSnapshot> = { ...stored };
+      for (const table of LATER_TABLES) {
+        parsed[table] ??= [];
+      }
       const valid =
         parsed.version === SCHEMA_VERSION && TABLES.every((table) => Array.isArray(parsed[table]));
       return valid ? (parsed as DatabaseSnapshot) : emptySnapshot();

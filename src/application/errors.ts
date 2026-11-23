@@ -24,7 +24,14 @@ export abstract class ApplicationError extends Error {
 }
 
 export type ResourceName =
-  'barbershop' | 'user' | 'professional' | 'service' | 'client' | 'appointment' | 'timeBlock';
+  | 'barbershop'
+  | 'user'
+  | 'professional'
+  | 'service'
+  | 'client'
+  | 'appointment'
+  | 'timeBlock'
+  | 'notification';
 
 export class NotFoundError extends ApplicationError {
   readonly code = 'NOT_FOUND';

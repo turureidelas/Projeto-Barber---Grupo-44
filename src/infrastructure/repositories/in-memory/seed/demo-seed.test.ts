@@ -103,4 +103,16 @@ describe('demo seed (Barbearia Nova Era)', () => {
       );
     }
   });
+
+  it('starts with a few unread notices about upcoming bookings the client cancelled', () => {
+    const notifications = seed.notifications.map(map.notificationFromRow);
+    expect(notifications).toHaveLength(3);
+    for (const notification of notifications) {
+      const appointment = appointments.find((item) => item.id === notification.appointmentId);
+      expect(appointment?.cancellation?.cancelledBy).toBe('CLIENT');
+      expect(notification.previousStart.getTime()).toBeGreaterThan(NOW.getTime());
+      expect(notification.createdAt.getTime()).toBeLessThan(NOW.getTime());
+      expect(notification.readBy).toEqual([]);
+    }
+  });
 });

@@ -2,6 +2,7 @@ import type {
   AppointmentRepository,
   BarbershopRepository,
   ClientRepository,
+  NotificationRepository,
   ProfessionalRepository,
   RangeQuery,
   ServiceRepository,
@@ -11,10 +12,12 @@ import type {
 import type { Appointment } from '@domain/entities/Appointment';
 import type { Barbershop } from '@domain/entities/Barbershop';
 import type { Client } from '@domain/entities/Client';
+import type { Notification } from '@domain/entities/Notification';
 import type {
   AppointmentId,
   BarbershopId,
   ClientId,
+  NotificationId,
   ProfessionalId,
   ServiceId,
   TimeBlockId,
@@ -206,5 +209,31 @@ export class InMemoryTimeBlockRepository implements TimeBlockRepository {
 
   delete(id: TimeBlockId): Promise<void> {
     return this.table.delete(id);
+  }
+}
+
+export class InMemoryNotificationRepository implements NotificationRepository {
+  private readonly table: EntityTable<'notifications', Notification>;
+
+  constructor(db: InMemoryDatabase) {
+    this.table = new EntityTable(
+      db,
+      'notifications',
+      map.notificationFromRow,
+      map.notificationToRow,
+    );
+  }
+
+  findById(id: NotificationId): Promise<Notification | null> {
+    return this.table.findById(id);
+  }
+
+  async listRecent(barbershopId: BarbershopId, limit: number): Promise<Notification[]> {
+    const rows = await this.table.where((row) => row.barbershopId === barbershopId);
+    return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limit);
+  }
+
+  save(notification: Notification): Promise<void> {
+    return this.table.save(notification);
   }
 }

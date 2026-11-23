@@ -10,6 +10,7 @@ import {
   InMemoryAppointmentRepository,
   InMemoryBarbershopRepository,
   InMemoryClientRepository,
+  InMemoryNotificationRepository,
   InMemoryProfessionalRepository,
   InMemoryServiceRepository,
   InMemoryTimeBlockRepository,
@@ -68,6 +69,7 @@ export function createContainer(options: ContainerOptions): Container {
     clients: new InMemoryClientRepository(db),
     appointments: new InMemoryAppointmentRepository(db),
     timeBlocks: new InMemoryTimeBlockRepository(db),
+    notifications: new InMemoryNotificationRepository(db),
     demoData,
   };
 

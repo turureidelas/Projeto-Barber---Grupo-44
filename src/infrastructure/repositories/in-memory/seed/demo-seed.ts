@@ -2,6 +2,7 @@ import { Appointment, type PaymentMethod } from '@domain/entities/Appointment';
 import { Barbershop } from '@domain/entities/Barbershop';
 import { Client } from '@domain/entities/Client';
 import { toId, type BarbershopId } from '@domain/entities/ids';
+import { Notification } from '@domain/entities/Notification';
 import { Professional } from '@domain/entities/Professional';
 import { Service } from '@domain/entities/Service';
 import { TimeBlock } from '@domain/entities/TimeBlock';
@@ -170,7 +171,31 @@ export function createDemoSeed(now: Date): DatabaseSnapshot {
     clients: clients.map(map.clientToRow),
     appointments: appointments.map(map.appointmentToRow),
     timeBlocks: timeBlocks.map(map.timeBlockToRow),
+    notifications: createNotifications(appointments, now).map(map.notificationToRow),
   };
+}
+
+const SEEDED_NOTIFICATIONS = 3;
+
+/**
+ * The bell starts with a few unread notices: the nearest upcoming bookings that clients
+ * cancelled through the app (their times are already free in the agenda).
+ */
+function createNotifications(appointments: readonly Appointment[], now: Date): Notification[] {
+  return appointments
+    .filter(
+      (appointment) =>
+        appointment.cancellation?.cancelledBy === 'CLIENT' &&
+        appointment.start.getTime() > now.getTime(),
+    )
+    .sort((a, b) => a.start.getTime() - b.start.getTime())
+    .slice(0, SEEDED_NOTIFICATIONS)
+    .map((appointment, index) =>
+      Notification.clientCancelled(appointment, {
+        id: toId(`notif-${String(index + 1).padStart(4, '0')}`),
+        now: new Date(now.getTime() - (index + 1) * 25 * MINUTE),
+      }),
+    );
 }
 
 function scheduleOf(pro: DemoProfessional): WorkSchedule {

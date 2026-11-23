@@ -16,6 +16,7 @@ import type {
   ServiceDTO,
   SessionUserDTO,
 } from '../dto/catalog';
+import type { NotificationListDTO } from '../dto/notifications';
 import type { ReportDTO } from '../dto/reports';
 import {
   CancelAppointment,
@@ -76,8 +77,25 @@ import {
   type SetActiveInput,
   type UpdateServiceInput,
 } from './catalog/service-management';
+import {
+  SimulateClientCancel,
+  SimulateClientReschedule,
+  type SimulateClientCancelInput,
+  type SimulateClientRescheduleInput,
+} from './demo/client-simulator';
 import { ListDemoAccounts, ResetDemoData } from './demo/ResetDemoData';
+import {
+  ListNotifications,
+  MarkAllNotificationsRead,
+  MarkNotificationRead,
+} from './notifications/notification-use-cases';
 import { GetReport, type GetReportInput } from './reports/GetReport';
+import {
+  UpdateBarbershop,
+  UpdateCancellationPolicy,
+  type UpdateBarbershopInput,
+  type UpdateCancellationPolicyInput,
+} from './settings/settings-use-cases';
 import type { UseCase } from './UseCase';
 
 /**
@@ -124,10 +142,22 @@ export interface UseCases {
   readonly reports: {
     readonly getReport: UseCase<GetReportInput, ReportDTO>;
   };
+  readonly settings: {
+    readonly updateBarbershop: UseCase<UpdateBarbershopInput, BarbershopDTO>;
+    readonly updateCancellationPolicy: UseCase<UpdateCancellationPolicyInput, BarbershopDTO>;
+  };
+  readonly notifications: {
+    readonly list: UseCase<void, NotificationListDTO>;
+    readonly markRead: UseCase<{ notificationId: string }, void>;
+    readonly markAllRead: UseCase<void, void>;
+  };
   /** null when running against the real API. */
   readonly demo: {
     readonly resetDemoData: UseCase<void, void>;
     readonly listAccounts: UseCase<void, DemoAccount[]>;
+    /** Stand-ins for the client app (not built yet): they leave a notice in the panel. */
+    readonly simulateClientCancel: UseCase<SimulateClientCancelInput, AppointmentDTO>;
+    readonly simulateClientReschedule: UseCase<SimulateClientRescheduleInput, AppointmentDTO>;
   } | null;
 }
 
@@ -172,10 +202,21 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
     reports: {
       getReport: new GetReport(deps),
     },
+    settings: {
+      updateBarbershop: new UpdateBarbershop(deps),
+      updateCancellationPolicy: new UpdateCancellationPolicy(deps),
+    },
+    notifications: {
+      list: new ListNotifications(deps),
+      markRead: new MarkNotificationRead(deps),
+      markAllRead: new MarkAllNotificationsRead(deps),
+    },
     demo: deps.demoData
       ? {
           resetDemoData: new ResetDemoData(deps.demoData),
           listAccounts: new ListDemoAccounts(deps.demoData),
+          simulateClientCancel: new SimulateClientCancel(deps),
+          simulateClientReschedule: new SimulateClientReschedule(deps),
         }
       : null,
   };
@@ -192,6 +233,14 @@ export type { ScheduleAppointmentInput } from './agenda/ScheduleAppointment';
 export type { BlockTimeInput, UnblockTimeInput } from './agenda/time-block-use-cases';
 export type { SignInInput } from './auth/auth-use-cases';
 export type { GetReportInput } from './reports/GetReport';
+export type {
+  UpdateBarbershopInput,
+  UpdateCancellationPolicyInput,
+} from './settings/settings-use-cases';
+export type {
+  SimulateClientCancelInput,
+  SimulateClientRescheduleInput,
+} from './demo/client-simulator';
 export type { ListInput, SearchClientsInput } from './catalog/catalog-use-cases';
 export type {
   CreateClientInput,
