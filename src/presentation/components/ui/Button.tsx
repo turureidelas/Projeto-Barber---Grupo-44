@@ -59,7 +59,7 @@ export function IconButton({
       type={type}
       aria-label={label}
       title={label}
-      className={cx(buttonClasses({ variant }), 'size-11 shrink-0 px-0', className)}
+      className={cx(buttonClasses({ variant, size: 'icon' }), className)}
       {...rest}
     >
       <Icon aria-hidden="true" className="size-5" />

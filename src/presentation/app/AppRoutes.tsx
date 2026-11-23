@@ -9,10 +9,10 @@ import {
   ReportsPage,
   ServicesPage,
   SettingsPage,
-  TodayPage,
   WeekPage,
 } from '../pages/placeholders';
 import { NotFoundPage } from '../pages/system/NotFoundPage';
+import { TodayPage } from '../pages/today/TodayPage';
 import { paths, ROUTE_PERMISSIONS } from './routes';
 
 export function AppRoutes() {

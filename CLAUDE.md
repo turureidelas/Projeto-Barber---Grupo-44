@@ -98,7 +98,10 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - Mensagens de erro: `errorMessage(error)` (`i18n/errors.ts`) → `ptBR.errors[code]`.
 - `eslint-plugin-jsx-a11y` (strict) ativo em todo `.tsx` (instalado com `overrides` no `package.json` porque ainda não declara suporte ao ESLint 10).
 - Testes de tela: `renderApp({ route, as, app })` (`src/main/testing/renderApp.tsx`) renderiza o app inteiro sobre os casos de uso reais; `createTestApp({ dataset: 'demo' })` usa o seed completo. jsdom ganha polyfill de `showModal`/`close` em `vitest.setup.ts`.
-- Telas das fases 4–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
+- Relógio da UI: `ClockContext` (mesmo `Clock` dos casos de uso, injetado pelo `main`); use `useNow()`/`useToday()` — nunca `new Date()` direto em tela.
+- **Agenda do dia** (`pages/today`): dia e profissional na URL (`?dia=yyyy-MM-dd&profissional=<id>`); "Próximo cliente" em destaque (`SpotlightCard`), "Em atendimento agora" compacto (`InServiceList`), resumo (`DaySummary`), lista com bloqueios e cancelados ocultos por padrão. Ações de 1 toque em `components/agenda/AppointmentActionButtons` + `hooks/useAgenda.ts` (toasts; "Faltou" com **Desfazer** no toast em vez de diálogo de confirmação). Concluir: `CompleteDialog` (valor pré-preenchido, Pix pré-selecionado).
+- Dinheiro digitado: `parseMoneyInput`/`formatMoneyInput` (`shared/money.ts`).
+- Telas das fases 5–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
 
 ### LGPD
 
@@ -165,4 +168,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

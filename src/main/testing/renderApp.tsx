@@ -25,7 +25,7 @@ export async function renderApp(options: RenderAppOptions = {}) {
   const user = userEvent.setup();
   const view = render(
     <UseCasesProvider useCases={app.useCases}>
-      <AppProviders queryClient={queryClient}>
+      <AppProviders queryClient={queryClient} clock={app.clock}>
         <MemoryRouter initialEntries={[options.route ?? '/']}>
           <AppRoutes />
         </MemoryRouter>

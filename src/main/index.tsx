@@ -15,7 +15,7 @@ if (!rootElement) {
   throw new Error('Elemento #root não encontrado em index.html.');
 }
 
-const { useCases } = createContainer({
+const { useCases, dependencies } = createContainer({
   env,
   storage: createBrowserStorage(),
   mockLatencyMs: MOCK_LATENCY_MS,
@@ -24,7 +24,7 @@ const { useCases } = createContainer({
 createRoot(rootElement).render(
   <StrictMode>
     <UseCasesProvider useCases={useCases}>
-      <App />
+      <App clock={dependencies.clock} />
     </UseCasesProvider>
   </StrictMode>,
 );

@@ -4,6 +4,8 @@ import {
   formatMoney,
   formatShortDate,
   formatTime,
+  addDaysToLocalDate,
+  isLocalDateString,
   initials,
   toLocalDateString,
 } from './format';
@@ -25,6 +27,17 @@ describe('format helpers (pt-BR, São Paulo)', () => {
 
   it('finds the São Paulo calendar day of an instant', () => {
     expect(toLocalDateString(new Date('2026-11-19T02:30:00Z'))).toBe('2026-11-18');
+  });
+
+  it('moves across days, months and years', () => {
+    expect(addDaysToLocalDate('2026-11-30', 1)).toBe('2026-12-01');
+    expect(addDaysToLocalDate('2027-01-01', -1)).toBe('2026-12-31');
+  });
+
+  it('validates local date strings', () => {
+    expect(isLocalDateString('2026-11-18')).toBe(true);
+    expect(isLocalDateString('2026-02-30')).toBe(false);
+    expect(isLocalDateString('18/11/2026')).toBe(false);
   });
 
   it('builds initials', () => {

@@ -1,7 +1,7 @@
 import { cx } from './cx';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'md' | 'lg';
+export type ButtonSize = 'md' | 'lg' | 'icon';
 
 const BASE =
   'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors ' +
@@ -18,6 +18,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
 const SIZES: Record<ButtonSize, string> = {
   md: 'min-h-11 px-4 text-base',
   lg: 'min-h-14 px-6 text-lg',
+  /** Square, icon only (IconButton). */
+  icon: 'size-11 shrink-0',
 };
 
 /** Shared so links that look like buttons (router links) stay consistent. */

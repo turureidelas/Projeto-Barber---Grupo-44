@@ -49,7 +49,7 @@ describe('sign in', () => {
       await screen.findByRole('button', { name: 'Entrar como Ricardo Almeida (Gestor)' }),
     );
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Olá, Ricardo' }),
+      await screen.findByRole('heading', { level: 1, name: 'Agenda de hoje' }),
     ).toBeInTheDocument();
   });
 });
@@ -57,7 +57,7 @@ describe('sign in', () => {
 describe('navigation by profile', () => {
   it('shows every area to the owner', async () => {
     await renderApp({ as: 'owner' });
-    await screen.findByRole('heading', { level: 1, name: 'Olá, Ricardo' });
+    await screen.findByRole('heading', { level: 1, name: 'Agenda de hoje' });
     expect(menuLinks()).toEqual([
       'Hoje',
       'Semana',

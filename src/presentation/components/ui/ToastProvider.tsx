@@ -2,15 +2,18 @@ import { CircleAlert, CircleCheck, X } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ptBR } from '../../i18n/pt-BR';
 import { cx } from './cx';
-import { ToastContext, type ToastApi, type ToastTone } from './toast-context';
+import { ToastContext, type ToastAction, type ToastApi, type ToastTone } from './toast-context';
 
 interface Toast {
   readonly id: number;
   readonly tone: ToastTone;
   readonly message: string;
+  readonly action: ToastAction | undefined;
 }
 
 const DURATION_MS = 4500;
+/** Toasts with an action ("Desfazer") stay longer so there is time to tap it. */
+const ACTION_DURATION_MS = 8000;
 
 /**
  * Feedback for one-tap actions. Announced by screen readers (aria-live) and placed above the
@@ -25,21 +28,24 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
   }, []);
 
   const show = useCallback(
-    (tone: ToastTone, message: string) => {
+    (tone: ToastTone, message: string, action?: ToastAction) => {
       nextId.current += 1;
       const id = nextId.current;
-      setToasts((current) => [...current.slice(-2), { id, tone, message }]);
-      setTimeout(() => {
-        dismiss(id);
-      }, DURATION_MS);
+      setToasts((current) => [...current.slice(-2), { id, tone, message, action }]);
+      setTimeout(
+        () => {
+          dismiss(id);
+        },
+        action ? ACTION_DURATION_MS : DURATION_MS,
+      );
     },
     [dismiss],
   );
 
   const api = useMemo<ToastApi>(
     () => ({
-      success: (message) => {
-        show('success', message);
+      success: (message, options) => {
+        show('success', message, options?.action);
       },
       error: (message) => {
         show('error', message);
@@ -74,6 +80,18 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
                 )}
               />
               <p className="flex-1 font-medium">{toast.message}</p>
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    dismiss(toast.id);
+                  }}
+                  className="min-h-11 rounded-lg px-3 font-bold text-accent hover:bg-surface-3"
+                >
+                  {toast.action.label}
+                </button>
+              )}
               <button
                 type="button"
                 aria-label={ptBR.common.close}

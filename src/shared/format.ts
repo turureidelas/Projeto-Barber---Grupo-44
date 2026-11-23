@@ -38,6 +38,19 @@ export function toLocalDateString(now: Date): string {
   return format(zoned(now), 'yyyy-MM-dd');
 }
 
+/** "2026-11-18" + 1 → "2026-11-19" (pure calendar math, no time zone involved). */
+export function addDaysToLocalDate(localDate: string, days: number): string {
+  const date = parseLocalDate(localDate);
+  date.setDate(date.getDate() + days);
+  return format(date, 'yyyy-MM-dd');
+}
+
+/** True for a well-formed "yyyy-MM-dd" that is a real calendar day. */
+export function isLocalDateString(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return format(parseLocalDate(value), 'yyyy-MM-dd') === value;
+}
+
 /** "Ricardo Almeida" → "RA" */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
