@@ -58,6 +58,11 @@ export function startOfWeek(localDate: string): string {
   return addDaysToLocalDate(localDate, -daysSinceMonday);
 }
 
+/** First day of the month of `localDate` ("yyyy-MM-dd"). */
+export function startOfMonth(localDate: string): string {
+  return `${localDate.slice(0, 8)}01`;
+}
+
 /** "2026-11-18" → "qua" */
 export function formatWeekdayShort(localDate: string): string {
   return format(parseLocalDate(localDate), 'EEEEEE', { locale: ptBR }).toLowerCase();

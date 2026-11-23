@@ -7,6 +7,7 @@ import {
   addDaysToLocalDate,
   isLocalDateString,
   initials,
+  startOfMonth,
   startOfWeek,
   formatWeekdayShort,
   formatDateTime,
@@ -49,6 +50,11 @@ describe('format helpers (pt-BR, São Paulo)', () => {
     expect(startOfWeek('2026-11-18')).toBe('2026-11-16');
     expect(startOfWeek('2026-11-16')).toBe('2026-11-16');
     expect(startOfWeek('2026-11-22')).toBe('2026-11-16');
+  });
+
+  it('finds the first day of a month', () => {
+    expect(startOfMonth('2026-11-18')).toBe('2026-11-01');
+    expect(startOfMonth('2026-02-01')).toBe('2026-02-01');
   });
 
   it('formats weekdays and date-times in pt-BR', () => {

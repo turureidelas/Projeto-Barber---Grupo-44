@@ -17,6 +17,8 @@ export const queryKeys = {
     ['agenda', 'daily', date, professionalId ?? 'all'] as const,
   weeklyAgenda: (startDate: string, professionalId: string) =>
     ['agenda', 'weekly', startDate, professionalId] as const,
+  /** Under the agenda prefix: any appointment change refreshes the numbers. */
+  report: (from: string, to: string) => ['agenda', 'report', from, to] as const,
   slots: (professionalId: string, serviceId: string, date: string, ignoreId: string | null) =>
     ['agenda', 'slots', professionalId, serviceId, date, ignoreId ?? 'none'] as const,
 };

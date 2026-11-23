@@ -109,7 +109,13 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
   - Equipe (`pages/professionals`): cartões com comissão e escala; `ProfessionalFormDialog` e `ScheduleDialog` (um intervalo por dia na UI; o domínio aceita vários). Novo profissional abre a escala em seguida. Mudar a escala **não** mexe em agendamentos já marcados.
   - Clientes (`pages/clients`): lista mascarada com busca, ficha `/clientes/:id` (telefone completo, consentimento, números de `summarizeClientHistory`, histórico). Cadastro exige consentimento LGPD (`CURRENT_TERMS_VERSION`) e telefone único (`ALREADY_EXISTS`). "Total gasto" só para quem vê relatórios. Cadastro rápido dentro do Novo agendamento (`QuickClientForm`, sem `<form>` aninhado).
 - Dados de demonstração: 360 clientes fictícios; o gerador prefere clientes sem visita nos últimos 10 dias (retorno realista).
-- Telas das fases 7–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
+- **Relatórios** (`pages/reports`, rota `/relatorios`; o profissional vê "Meus números"):
+  - Métricas puras em `domain/services/reports.ts` (`buildPeriodReport` + `revenueOf`, `noShowRate`, `occupancyOf`, `rankServices`, `paymentBreakdown`, `clientReturn`, `periodDates`). Período de no máximo 366 dias.
+  - Definições: faturamento = soma do valor pago nos concluídos; comissão = `commissionOn(faturamento do profissional)`; ocupação = minutos marcados (exceto cancelados; falta conta) ÷ (escala − intervalos − bloqueios, bloqueios sobrepostos contados uma vez), limitada a 100%; faltas = faltas ÷ (concluídos + faltas); serviços mais pedidos = agendamentos não cancelados; retorno = clientes com atendimento concluído no período que já tinham vindo nos 12 meses anteriores (`RETURN_LOOKBACK_DAYS`) + média de `summarizeClientHistory().averageDaysBetweenVisits`.
+  - Caso de uso `GetReport({ from, to, professionalId? })` → `ReportDTO` (centavos, percentuais inteiros ou `null`). Gestor: barbearia toda (`scope: 'BARBERSHOP'`) ou um profissional; profissional: sempre os próprios números, ignorando o `professionalId` enviado; recepção: `PERMISSION_DENIED`. Profissional inativo só aparece se teve agendamento no período.
+  - URL: `?periodo=hoje|semana|mes|datas&de=yyyy-MM-dd&ate=yyyy-MM-dd` (padrão: semana). "Esta semana" e "Este mês" vão **até hoje** (o futuro não dilui os números). Lógica em `pages/reports/period.ts`.
+  - Gráficos feitos à mão em `components/reports/charts.tsx` (`Meter`, `BarList` em SVG decorativo; o valor sempre aparece como texto). Chave de cache `queryKeys.report` fica sob o prefixo `agenda`, então qualquer mudança de agendamento atualiza os números.
+- A tela da fase 8 (configurações) ainda é placeholder em `pages/placeholders.tsx`; ganha sua pasta quando for construída.
 
 ### LGPD
 
@@ -176,4 +182,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios ✅ · 8. Configurações + notificações · 9. Polimento

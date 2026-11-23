@@ -16,6 +16,7 @@ import type {
   ServiceDTO,
   SessionUserDTO,
 } from '../dto/catalog';
+import type { ReportDTO } from '../dto/reports';
 import {
   CancelAppointment,
   CompleteAppointment,
@@ -76,6 +77,7 @@ import {
   type UpdateServiceInput,
 } from './catalog/service-management';
 import { ListDemoAccounts, ResetDemoData } from './demo/ResetDemoData';
+import { GetReport, type GetReportInput } from './reports/GetReport';
 import type { UseCase } from './UseCase';
 
 /**
@@ -118,6 +120,9 @@ export interface UseCases {
     readonly createClient: UseCase<CreateClientInput, ClientSummaryDTO>;
     readonly updateClient: UseCase<UpdateClientInput, ClientSummaryDTO>;
     readonly getClientDetails: UseCase<{ clientId: string }, ClientDetailsDTO>;
+  };
+  readonly reports: {
+    readonly getReport: UseCase<GetReportInput, ReportDTO>;
   };
   /** null when running against the real API. */
   readonly demo: {
@@ -164,6 +169,9 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
       updateClient: new UpdateClient(deps),
       getClientDetails: new GetClientDetails(deps),
     },
+    reports: {
+      getReport: new GetReport(deps),
+    },
     demo: deps.demoData
       ? {
           resetDemoData: new ResetDemoData(deps.demoData),
@@ -183,6 +191,7 @@ export type { RescheduleAppointmentInput } from './agenda/RescheduleAppointment'
 export type { ScheduleAppointmentInput } from './agenda/ScheduleAppointment';
 export type { BlockTimeInput, UnblockTimeInput } from './agenda/time-block-use-cases';
 export type { SignInInput } from './auth/auth-use-cases';
+export type { GetReportInput } from './reports/GetReport';
 export type { ListInput, SearchClientsInput } from './catalog/catalog-use-cases';
 export type {
   CreateClientInput,
