@@ -1,6 +1,6 @@
 import { createTestApp, PASSWORD } from '@main/testing/createTestApp';
 import { renderApp } from '@main/testing/renderApp';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 /** Visible names of the links in the first navigation (sidebar). */
@@ -144,5 +144,23 @@ describe('account actions', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Resetar dados de demonstração' }));
 
     expect(await screen.findByText('Dados de demonstração restaurados.')).toBeInTheDocument();
+  });
+});
+
+describe('accessibility of navigation', () => {
+  it('names the tab after the screen and focuses the new title after navigating', async () => {
+    const { user } = await renderApp({ as: 'owner', route: '/' });
+    await screen.findByRole('heading', { level: 1, name: 'Agenda de hoje' });
+    expect(document.title).toBe('Agenda de hoje · Na Régua');
+
+    const [menu] = screen.getAllByRole('navigation', { name: 'Menu principal' });
+    if (!menu) throw new Error('menu not found');
+    await user.click(within(menu).getByRole('link', { name: 'Clientes' }));
+
+    const title = await screen.findByRole('heading', { level: 1, name: 'Clientes' });
+    expect(document.title).toBe('Clientes · Na Régua');
+    await waitFor(() => {
+      expect(title).toHaveFocus();
+    });
   });
 });

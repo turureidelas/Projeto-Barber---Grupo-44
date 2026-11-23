@@ -1,18 +1,42 @@
+import { lazy } from 'react';
 import { Route, Routes } from 'react-router';
 import { RequireAuth, RequirePermission } from '../components/auth/guards';
 import { AppShell } from '../components/layout/AppShell';
 import { LoginPage } from '../pages/login/LoginPage';
-import { MorePage } from '../pages/more/MorePage';
-import { ClientDetailsPage } from '../pages/clients/ClientDetailsPage';
-import { ClientsPage } from '../pages/clients/ClientsPage';
-import { ProfessionalsPage } from '../pages/professionals/ProfessionalsPage';
-import { ReportsPage } from '../pages/reports/ReportsPage';
-import { ServicesPage } from '../pages/services/ServicesPage';
-import { SettingsPage } from '../pages/settings/SettingsPage';
 import { NotFoundPage } from '../pages/system/NotFoundPage';
 import { TodayPage } from '../pages/today/TodayPage';
-import { WeekPage } from '../pages/week/WeekPage';
 import { paths, ROUTE_PERMISSIONS } from './routes';
+
+/*
+ * Code splitting: the agenda of the day (home) and login load right away; the other screens
+ * are fetched the first time they are opened (AppShell shows a loading state meanwhile).
+ */
+const WeekPage = lazy(() =>
+  import('../pages/week/WeekPage').then((m) => ({ default: m.WeekPage })),
+);
+const ClientsPage = lazy(() =>
+  import('../pages/clients/ClientsPage').then((m) => ({ default: m.ClientsPage })),
+);
+const ClientDetailsPage = lazy(() =>
+  import('../pages/clients/ClientDetailsPage').then((m) => ({ default: m.ClientDetailsPage })),
+);
+const ServicesPage = lazy(() =>
+  import('../pages/services/ServicesPage').then((m) => ({ default: m.ServicesPage })),
+);
+const ProfessionalsPage = lazy(() =>
+  import('../pages/professionals/ProfessionalsPage').then((m) => ({
+    default: m.ProfessionalsPage,
+  })),
+);
+const ReportsPage = lazy(() =>
+  import('../pages/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })),
+);
+const SettingsPage = lazy(() =>
+  import('../pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const MorePage = lazy(() =>
+  import('../pages/more/MorePage').then((m) => ({ default: m.MorePage })),
+);
 
 export function AppRoutes() {
   return (

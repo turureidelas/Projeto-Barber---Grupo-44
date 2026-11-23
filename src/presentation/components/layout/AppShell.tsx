@@ -1,5 +1,6 @@
 import { Ellipsis } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router';
+import { Suspense, useEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import { navItemsFor, paths, type NavItem } from '../../app/routes';
 import { useIsDemo } from '../../hooks/useDemo';
 import { useCurrentUser } from '../../hooks/useSession';
@@ -8,6 +9,7 @@ import { ResetDemoButton } from '../demo/ResetDemoButton';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
+import { LoadingState } from '../ui/states';
 import { cx } from '../ui/cx';
 import { Brand } from './Brand';
 import { SignOutButton } from './SignOutButton';
@@ -23,6 +25,7 @@ export function AppShell() {
   const isDemo = useIsDemo();
   const items = navItemsFor(user);
   const bottomItems = items.filter((item) => item.inBottomBar);
+  useFocusOnNavigation();
 
   return (
     <div className="min-h-dvh lg:flex">
@@ -73,7 +76,10 @@ export function AppShell() {
           tabIndex={-1}
           className="mx-auto w-full max-w-7xl flex-1 px-4 pt-5 pb-28 focus:outline-none sm:px-6 lg:px-8 lg:pt-8 lg:pb-10"
         >
-          <Outlet />
+          {/* Screens are loaded on demand (code splitting per route). */}
+          <Suspense fallback={<LoadingState />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 
@@ -95,6 +101,26 @@ export function AppShell() {
       </nav>
     </div>
   );
+}
+
+/**
+ * After moving to another screen (not on the first load), focus its title, so keyboard and
+ * screen reader users start from the new content instead of the menu they clicked.
+ */
+function useFocusOnNavigation() {
+  const { pathname } = useLocation();
+  const previous = useRef(pathname);
+
+  useEffect(() => {
+    if (previous.current === pathname) return;
+    previous.current = pathname;
+    const frame = requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`#${MAIN_ID} h1`)?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [pathname]);
 }
 
 function SidebarLink({ item }: { readonly item: NavItem }) {

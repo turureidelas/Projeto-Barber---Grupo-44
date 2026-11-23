@@ -8,6 +8,29 @@ export default defineConfig({
     // Aliases (@domain, @application, ...) come from tsconfig.app.json — single source of truth.
     tsconfigPaths: true,
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Libraries change less often than our code: separate chunks keep them cached
+        // between deploys and keep every file under the 500 kB warning.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react',
+              test: /node_modules[/\\](react|react-dom|react-router|scheduler)[/\\]/,
+              priority: 20,
+            },
+            {
+              name: 'data',
+              test: /node_modules[/\\](@tanstack|zod|react-hook-form|@hookform)[/\\]/,
+              priority: 10,
+            },
+            { name: 'dates', test: /node_modules[/\\](date-fns|@date-fns)[/\\]/, priority: 10 },
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
