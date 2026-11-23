@@ -4,12 +4,8 @@ import { ptBR } from '../i18n/pt-BR';
 
 /**
  * Screens delivered in later phases. Each one moves to its own folder (pages/<screen>/)
- * when it is built: week (phase 5), cadastros (6), reports (7), settings (8).
+ * when it is built: cadastros (phase 6), reports (7), settings (8).
  */
-
-export function WeekPage() {
-  return <ComingSoon title={ptBR.pages.week} />;
-}
 
 export function ClientsPage() {
   return <ComingSoon title={ptBR.pages.clients} />;

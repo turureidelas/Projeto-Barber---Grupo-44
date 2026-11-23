@@ -1,6 +1,12 @@
 import type { ApplicationDependencies } from '../dependencies';
 import type { DemoAccount } from '../ports/DemoDataGateway';
-import type { AppointmentDTO, DailyAgendaDTO, SlotDTO, TimeBlockDTO } from '../dto/agenda';
+import type {
+  AppointmentDTO,
+  DailyAgendaDTO,
+  SlotDTO,
+  TimeBlockDTO,
+  WeeklyAgendaDTO,
+} from '../dto/agenda';
 import type {
   BarbershopDTO,
   ClientSummaryDTO,
@@ -19,6 +25,7 @@ import {
   type CompleteAppointmentInput,
 } from './agenda/appointment-status-commands';
 import { GetDailyAgenda, type GetDailyAgendaInput } from './agenda/GetDailyAgenda';
+import { GetWeeklyAgenda, type GetWeeklyAgendaInput } from './agenda/GetWeeklyAgenda';
 import { ListAvailableSlots, type ListAvailableSlotsInput } from './agenda/ListAvailableSlots';
 import {
   RescheduleAppointment,
@@ -55,6 +62,7 @@ export interface UseCases {
   };
   readonly agenda: {
     readonly getDailyAgenda: UseCase<GetDailyAgendaInput, DailyAgendaDTO>;
+    readonly getWeeklyAgenda: UseCase<GetWeeklyAgendaInput, WeeklyAgendaDTO>;
     readonly listAvailableSlots: UseCase<ListAvailableSlotsInput, SlotDTO[]>;
     readonly scheduleAppointment: UseCase<ScheduleAppointmentInput, AppointmentDTO>;
     readonly confirmAppointment: UseCase<AppointmentCommandInput, AppointmentDTO>;
@@ -88,6 +96,7 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
     },
     agenda: {
       getDailyAgenda: new GetDailyAgenda(deps),
+      getWeeklyAgenda: new GetWeeklyAgenda(deps),
       listAvailableSlots: new ListAvailableSlots(deps),
       scheduleAppointment: new ScheduleAppointment(deps),
       confirmAppointment: new ConfirmAppointment(deps),
@@ -118,6 +127,7 @@ export type { UseCase } from './UseCase';
 export type { DemoAccount } from '../ports/DemoDataGateway';
 export type * from './agenda/appointment-status-commands';
 export type { GetDailyAgendaInput } from './agenda/GetDailyAgenda';
+export type { GetWeeklyAgendaInput } from './agenda/GetWeeklyAgenda';
 export type { ListAvailableSlotsInput } from './agenda/ListAvailableSlots';
 export type { RescheduleAppointmentInput } from './agenda/RescheduleAppointment';
 export type { ScheduleAppointmentInput } from './agenda/ScheduleAppointment';

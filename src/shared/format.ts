@@ -51,6 +51,35 @@ export function isLocalDateString(value: string): boolean {
   return format(parseLocalDate(value), 'yyyy-MM-dd') === value;
 }
 
+/** Monday of the week containing `localDate` ("yyyy-MM-dd"). */
+export function startOfWeek(localDate: string): string {
+  const date = parseLocalDate(localDate);
+  const daysSinceMonday = (date.getDay() + 6) % 7;
+  return addDaysToLocalDate(localDate, -daysSinceMonday);
+}
+
+/** "2026-11-18" → "qua" */
+export function formatWeekdayShort(localDate: string): string {
+  return format(parseLocalDate(localDate), 'EEEEEE', { locale: ptBR }).toLowerCase();
+}
+
+/** ISO instant → "qua, 18/11 às 10:00" (São Paulo). */
+export function formatDateTime(iso: string): string {
+  return format(zoned(iso), "EEEEEE, dd/MM 'às' HH:mm", { locale: ptBR }).toLowerCase();
+}
+
+/** "2026-11-18" + "09:30" in São Paulo → ISO instant. */
+export function localDateTimeToIso(localDate: string, time: string): string {
+  const [year = 0, month = 1, day = 1] = localDate.split('-').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return new TZDate(year, month - 1, day, hours, minutes, DISPLAY_TIME_ZONE).toISOString();
+}
+
+/** ISO instant → "yyyy-MM-dd" in São Paulo. */
+export function isoToLocalDate(iso: string): string {
+  return toLocalDateString(new Date(iso));
+}
+
 /** "Ricardo Almeida" → "RA" */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

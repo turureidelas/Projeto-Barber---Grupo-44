@@ -85,6 +85,7 @@ function toAppointmentDTO(appointment: Appointment, lookups: AppointmentLookups)
     status: appointment.status,
     priceCents: appointment.price.cents,
     noShowAllowedFrom: lookups.policy.noShowAllowedFrom(appointment.start).toISOString(),
+    changeDeadline: lookups.policy.changeDeadline(appointment.start).toISOString(),
     payment: serviceRecord && {
       amountPaidCents: serviceRecord.amountPaid.cents,
       method: serviceRecord.paymentMethod,

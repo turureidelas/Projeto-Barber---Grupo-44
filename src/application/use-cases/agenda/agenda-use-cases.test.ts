@@ -50,6 +50,7 @@ describe('ScheduleAppointment', () => {
       durationMinutes: 30,
       priceCents: 4500,
       noShowAllowedFrom: iso('10:15'),
+      changeDeadline: iso('08:00'),
       payment: null,
       cancellation: null,
     });
@@ -348,5 +349,48 @@ describe('GetDailyAgenda', () => {
   it('hides revenue from the receptionist', async () => {
     await app.signInAs('receptionist');
     expect((await daily()).summary.revenueCents).toBeNull();
+  });
+});
+
+describe('GetWeeklyAgenda', () => {
+  const weekly = (professionalId: string = fixture.ricardo) =>
+    app.useCases.agenda.getWeeklyAgenda.execute({ startDate: '2026-11-16', professionalId });
+
+  it('returns seven days with working hours, appointments and blocks', async () => {
+    await book('10:00');
+    await app.useCases.agenda.blockTime.execute({
+      professionalId: fixture.ricardo,
+      start: iso('15:00'),
+      end: iso('16:00'),
+      reason: null,
+    });
+    await book('10:00', { professionalId: fixture.bruno });
+
+    const week = await weekly();
+    expect(week.professional.name).toBe('Ricardo Almeida');
+    expect(week.days.map((day) => day.date)).toEqual([
+      '2026-11-16',
+      '2026-11-17',
+      '2026-11-18',
+      '2026-11-19',
+      '2026-11-20',
+      '2026-11-21',
+      '2026-11-22',
+    ]);
+    const wednesday = week.days[2];
+    expect(wednesday?.workingHours).toEqual([
+      { start: '09:00', end: '12:00' },
+      { start: '13:00', end: '19:00' },
+    ]);
+    expect(wednesday?.appointments.map((a) => a.professionalName)).toEqual(['Ricardo Almeida']);
+    expect(wednesday?.timeBlocks).toHaveLength(1);
+    expect(week.days[6]?.workingHours).toEqual([]);
+    expect(week.days[0]?.appointments).toEqual([]);
+  });
+
+  it('only shows a barber their own week', async () => {
+    await app.signInAs('barber');
+    await expect(weekly(fixture.bruno)).resolves.toBeDefined();
+    await expect(weekly()).rejects.toThrow(PermissionDeniedError);
   });
 });

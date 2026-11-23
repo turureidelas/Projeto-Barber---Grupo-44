@@ -1,33 +1,46 @@
 import type { ProfessionalDTO } from '@application/dto/catalog';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, IconButton } from '../../components/ui/Button';
-import { cx } from '../../components/ui/cx';
 import { ptBR } from '../../i18n/pt-BR';
+import { Button, IconButton } from '../ui/Button';
+import { cx } from '../ui/cx';
 
-const t = ptBR.today;
-
-interface DateNavigatorProps {
-  readonly isToday: boolean;
+interface PeriodNavigatorProps {
+  readonly label: string;
+  readonly previousLabel: string;
+  readonly nextLabel: string;
+  /** "Hoje" / "Esta semana" — only shown when away from the current period. */
+  readonly currentLabel: string;
+  readonly isCurrent: boolean;
   readonly onPrevious: () => void;
   readonly onNext: () => void;
-  readonly onToday: () => void;
+  readonly onCurrent: () => void;
 }
 
-export function DateNavigator({ isToday, onPrevious, onNext, onToday }: DateNavigatorProps) {
+/** ‹ Hoje › — moves between days or weeks. */
+export function PeriodNavigator({
+  label,
+  previousLabel,
+  nextLabel,
+  currentLabel,
+  isCurrent,
+  onPrevious,
+  onNext,
+  onCurrent,
+}: PeriodNavigatorProps) {
   return (
-    <div role="group" aria-label={t.dateNavigation} className="flex items-center gap-1">
+    <div role="group" aria-label={label} className="flex items-center gap-1">
       <IconButton
         icon={ChevronLeft}
-        label={t.previousDay}
+        label={previousLabel}
         variant="secondary"
         onClick={onPrevious}
       />
-      {!isToday && (
-        <Button variant="secondary" onClick={onToday}>
-          {t.backToToday}
+      {!isCurrent && (
+        <Button variant="secondary" onClick={onCurrent}>
+          {currentLabel}
         </Button>
       )}
-      <IconButton icon={ChevronRight} label={t.nextDay} variant="secondary" onClick={onNext} />
+      <IconButton icon={ChevronRight} label={nextLabel} variant="secondary" onClick={onNext} />
     </div>
   );
 }
@@ -36,16 +49,21 @@ interface ProfessionalFilterProps {
   readonly professionals: readonly ProfessionalDTO[];
   readonly selectedId: string | null;
   readonly onSelect: (professionalId: string | null) => void;
+  readonly label: string;
+  /** Adds a "Todos" chip (selectedId = null). */
+  readonly includeAll?: boolean;
 }
 
-/** Big chips (one tap) to see everyone or a single professional. */
+/** Big chips (one tap) to pick whose agenda to see. */
 export function ProfessionalFilter({
   professionals,
   selectedId,
   onSelect,
+  label,
+  includeAll = false,
 }: ProfessionalFilterProps) {
   const options = [
-    { id: null, label: t.allProfessionals },
+    ...(includeAll ? [{ id: null, label: ptBR.today.allProfessionals }] : []),
     ...professionals.map((professional) => ({
       id: professional.id,
       label: professional.name.split(' ')[0] ?? professional.name,
@@ -54,7 +72,7 @@ export function ProfessionalFilter({
   return (
     <div
       role="group"
-      aria-label={t.filterLabel}
+      aria-label={label}
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
     >
       {options.map((option) => {

@@ -1,4 +1,10 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import {
+  useId,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import { cx } from './cx';
 
 const CONTROL =
@@ -57,6 +63,29 @@ export function TextField({ label, hint, error, id, className, ...rest }: TextFi
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(fieldId, hint, error)}
         className={cx(CONTROL, className)}
+        {...rest}
+      />
+    </FieldShell>
+  );
+}
+
+export interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  readonly label: string;
+  readonly hint?: string;
+  readonly error?: string | undefined;
+}
+
+export function TextAreaField({ label, hint, error, id, className, ...rest }: TextAreaFieldProps) {
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
+  return (
+    <FieldShell id={fieldId} label={label} hint={hint} error={error}>
+      <textarea
+        id={fieldId}
+        rows={3}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(fieldId, hint, error)}
+        className={cx(CONTROL, 'py-3', className)}
         {...rest}
       />
     </FieldShell>

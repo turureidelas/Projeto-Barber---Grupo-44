@@ -1,4 +1,4 @@
-import type { AppointmentDTO, DailyAgendaDTO, TimeBlockDTO } from '@application/dto/agenda';
+import type { AppointmentDTO, DailyAgendaDTO } from '@application/dto/agenda';
 import { addDaysToLocalDate, formatLongDate, isLocalDateString } from '@shared/format';
 import { CalendarX2, Coffee } from 'lucide-react';
 import { useId, useState } from 'react';
@@ -6,6 +6,8 @@ import { useSearchParams } from 'react-router';
 import { AppointmentActionButtons } from '../../components/agenda/AppointmentActionButtons';
 import { AppointmentItem, TimeBlockItem } from '../../components/agenda/AppointmentItem';
 import { CompleteDialog } from '../../components/agenda/CompleteDialog';
+import { PeriodNavigator, ProfessionalFilter } from '../../components/agenda/filters';
+import { mergeTimeline } from '../../components/agenda/timeline';
 import { Button } from '../../components/ui/Button';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/states';
@@ -20,7 +22,6 @@ import { useCurrentUser } from '../../hooks/useSession';
 import { errorMessage } from '../../i18n/errors';
 import { ptBR } from '../../i18n/pt-BR';
 import { DaySummary } from './DaySummary';
-import { DateNavigator, ProfessionalFilter } from './filters';
 import { InServiceList } from './InServiceList';
 import { SpotlightCard } from './SpotlightCard';
 
@@ -65,20 +66,24 @@ export function TodayPage() {
   };
 
   return (
-    <>
+    <div className="mx-auto max-w-3xl">
       <PageHeader
         title={isToday ? t.title : t.otherDayTitle}
         subtitle={formatLongDate(date)}
         actions={
-          <DateNavigator
-            isToday={isToday}
+          <PeriodNavigator
+            label={t.dateNavigation}
+            previousLabel={t.previousDay}
+            nextLabel={t.nextDay}
+            currentLabel={t.backToToday}
+            isCurrent={isToday}
             onPrevious={() => {
               goToDay(addDaysToLocalDate(date, -1));
             }}
             onNext={() => {
               goToDay(addDaysToLocalDate(date, 1));
             }}
-            onToday={() => {
+            onCurrent={() => {
               goToDay(today);
             }}
           />
@@ -88,6 +93,8 @@ export function TodayPage() {
       <div className="flex flex-col gap-5">
         {seesEveryone && (professionals.data?.length ?? 0) > 1 && (
           <ProfessionalFilter
+            label={t.filterLabel}
+            includeAll
             professionals={professionals.data ?? []}
             selectedId={professionalId}
             onSelect={(id) => {
@@ -130,7 +137,7 @@ export function TodayPage() {
           );
         }}
       />
-    </>
+    </div>
   );
 }
 
@@ -239,19 +246,4 @@ function DayContent({
       </section>
     </>
   );
-}
-
-type TimelineEntry =
-  | { readonly kind: 'appointment'; readonly item: AppointmentDTO }
-  | { readonly kind: 'block'; readonly item: TimeBlockDTO };
-
-/** Appointments and blocked times in a single chronological list. */
-function mergeTimeline(
-  appointments: readonly AppointmentDTO[],
-  blocks: readonly TimeBlockDTO[],
-): TimelineEntry[] {
-  return [
-    ...appointments.map((item) => ({ kind: 'appointment' as const, item })),
-    ...blocks.map((item) => ({ kind: 'block' as const, item })),
-  ].sort((a, b) => Date.parse(a.item.start) - Date.parse(b.item.start));
 }

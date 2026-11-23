@@ -23,6 +23,8 @@ export interface AppointmentDTO {
   readonly priceCents: number;
   /** "Cliente faltou" is only allowed from this instant (policy tolerance). */
   readonly noShowAllowedFrom: string;
+  /** After this instant, cancelling/rescheduling is "late" (policy minimum notice). */
+  readonly changeDeadline: string;
   readonly payment: {
     readonly amountPaidCents: number;
     readonly method: PaymentMethod;
@@ -72,6 +74,21 @@ export interface DailyAgendaDTO {
   /** Next client to attend (scheduled/confirmed, not finished yet). */
   readonly next: AppointmentDTO | null;
   readonly summary: DailySummaryDTO;
+}
+
+export interface AgendaDayDTO {
+  readonly date: string;
+  /** Bookable windows ("HH:mm"), already without breaks. Empty = day off. */
+  readonly workingHours: readonly { readonly start: string; readonly end: string }[];
+  readonly appointments: readonly AppointmentDTO[];
+  readonly timeBlocks: readonly TimeBlockDTO[];
+}
+
+export interface WeeklyAgendaDTO {
+  readonly startDate: string;
+  readonly professional: AgendaProfessionalDTO;
+  /** Seven consecutive days starting at startDate. */
+  readonly days: readonly AgendaDayDTO[];
 }
 
 export interface SlotDTO {

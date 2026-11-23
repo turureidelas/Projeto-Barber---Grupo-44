@@ -62,7 +62,7 @@ export function Modal({ open, onClose, title, description, children, footer }: M
           </header>
           {children && <div className="overflow-y-auto p-4 sm:p-5">{children}</div>}
           {footer && (
-            <footer className="flex flex-col-reverse gap-2 border-t border-line p-4 sm:flex-row sm:justify-end sm:p-5">
+            <footer className="flex flex-col-reverse gap-2 border-t border-line p-4 sm:flex-row sm:flex-wrap sm:justify-end sm:p-5 sm:[&>*]:whitespace-nowrap">
               {footer}
             </footer>
           )}

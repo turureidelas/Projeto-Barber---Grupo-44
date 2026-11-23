@@ -1,6 +1,10 @@
-import type { AppointmentDTO } from '@application/dto/agenda';
-import type { CompleteAppointmentInput } from '@application/use-cases';
-import { formatMoney } from '@shared/format';
+import type { AppointmentDTO, TimeBlockDTO } from '@application/dto/agenda';
+import type {
+  BlockTimeInput,
+  CompleteAppointmentInput,
+  ScheduleAppointmentInput,
+} from '@application/use-cases';
+import { formatDateTime, formatMoney } from '@shared/format';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { errorMessage } from '../i18n/errors';
 import { ptBR } from '../i18n/pt-BR';
@@ -97,3 +101,122 @@ export function useAppointmentActions() {
 }
 
 export type AppointmentActions = ReturnType<typeof useAppointmentActions>;
+
+/** One professional's week (7 days from startDate). */
+export function useWeeklyAgenda(startDate: string, professionalId: string | null) {
+  const { agenda } = useUseCases();
+  return useQuery({
+    queryKey: queryKeys.weeklyAgenda(startDate, professionalId ?? ''),
+    queryFn: () =>
+      agenda.getWeeklyAgenda.execute({ startDate, professionalId: professionalId ?? '' }),
+    enabled: professionalId !== null,
+    refetchInterval: REFRESH_MS,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export interface SlotQuery {
+  readonly professionalId: string;
+  readonly serviceId: string;
+  readonly date: string;
+  readonly ignoreAppointmentId?: string;
+}
+
+/** Free start times computed by the availability engine — the UI only offers these. */
+export function useAvailableSlots(query: SlotQuery | null) {
+  const { agenda } = useUseCases();
+  return useQuery({
+    queryKey: queryKeys.slots(
+      query?.professionalId ?? '',
+      query?.serviceId ?? '',
+      query?.date ?? '',
+      query?.ignoreAppointmentId ?? null,
+    ),
+    queryFn: () => {
+      if (!query) return Promise.resolve([]);
+      return agenda.listAvailableSlots.execute(query);
+    },
+    enabled: query !== null && query.professionalId !== '' && query.serviceId !== '',
+  });
+}
+
+/** Confirm, reschedule, cancel, book, block and unblock — each with a toast and a refresh. */
+export function useAgendaManagement() {
+  const { agenda } = useUseCases();
+  const queryClient = useQueryClient();
+  const toast = useToast();
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.agenda });
+  const fail = (error: unknown) => {
+    toast.error(errorMessage(error));
+  };
+
+  const confirm = useMutation({
+    mutationFn: (appointment: AppointmentDTO) =>
+      agenda.confirmAppointment.execute({ appointmentId: appointment.id }),
+    onSuccess: async (updated) => {
+      toast.success(ptBR.details.confirmed(updated.clientName));
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  const cancel = useMutation({
+    mutationFn: (input: { appointment: AppointmentDTO; reason: string | null }) =>
+      agenda.cancelAppointment.execute({
+        appointmentId: input.appointment.id,
+        reason: input.reason,
+      }),
+    onSuccess: async (updated) => {
+      toast.success(ptBR.cancel.done(updated.clientName));
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  const reschedule = useMutation({
+    mutationFn: (input: { appointment: AppointmentDTO; start: string; professionalId: string }) =>
+      agenda.rescheduleAppointment.execute({
+        appointmentId: input.appointment.id,
+        start: input.start,
+        professionalId: input.professionalId,
+      }),
+    onSuccess: async (updated) => {
+      toast.success(ptBR.reschedule.done(updated.clientName, formatDateTime(updated.start)));
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  const schedule = useMutation({
+    mutationFn: (input: ScheduleAppointmentInput) => agenda.scheduleAppointment.execute(input),
+    onSuccess: async (created) => {
+      toast.success(ptBR.newAppointment.done(created.clientName, formatDateTime(created.start)));
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  const block = useMutation({
+    mutationFn: (input: BlockTimeInput) => agenda.blockTime.execute(input),
+    onSuccess: async () => {
+      toast.success(ptBR.block.done);
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  const unblock = useMutation({
+    mutationFn: (timeBlock: TimeBlockDTO) =>
+      agenda.unblockTime.execute({ timeBlockId: timeBlock.id }),
+    onSuccess: async () => {
+      toast.success(ptBR.week.unblocked);
+      await refresh();
+    },
+    onError: fail,
+  });
+
+  return { confirm, cancel, reschedule, schedule, block, unblock };
+}
+
+export type AgendaManagement = ReturnType<typeof useAgendaManagement>;

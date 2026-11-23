@@ -100,8 +100,11 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - Testes de tela: `renderApp({ route, as, app })` (`src/main/testing/renderApp.tsx`) renderiza o app inteiro sobre os casos de uso reais; `createTestApp({ dataset: 'demo' })` usa o seed completo. jsdom ganha polyfill de `showModal`/`close` em `vitest.setup.ts`.
 - Relógio da UI: `ClockContext` (mesmo `Clock` dos casos de uso, injetado pelo `main`); use `useNow()`/`useToday()` — nunca `new Date()` direto em tela.
 - **Agenda do dia** (`pages/today`): dia e profissional na URL (`?dia=yyyy-MM-dd&profissional=<id>`); "Próximo cliente" em destaque (`SpotlightCard`), "Em atendimento agora" compacto (`InServiceList`), resumo (`DaySummary`), lista com bloqueios e cancelados ocultos por padrão. Ações de 1 toque em `components/agenda/AppointmentActionButtons` + `hooks/useAgenda.ts` (toasts; "Faltou" com **Desfazer** no toast em vez de diálogo de confirmação). Concluir: `CompleteDialog` (valor pré-preenchido, Pix pré-selecionado).
-- Dinheiro digitado: `parseMoneyInput`/`formatMoneyInput` (`shared/money.ts`).
-- Telas das fases 5–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
+- **Agenda da semana** (`pages/week`): `GetWeeklyAgenda` (7 dias de um profissional com horário de trabalho, agendamentos e bloqueios). URL `?semana=<segunda>&profissional=<id>&dia=<dia no celular>`. Mesmo DOM para celular (abas de dia, só o dia escolhido) e desktop (7 colunas, `lg:`). Cartão abre `AppointmentDetailsDialog` → Confirmar / Remarcar (`RescheduleDialog` + `SlotPicker`, só horários livres) / Cancelar (`CancelDialog`: motivo obrigatório quando `now > changeDeadline`). `BlockTimeDialog`, `NewAppointmentDialog` (busca de cliente com debounce) e liberar bloqueio via `ConfirmDialog`. Mutações em `useAgendaManagement()`.
+- `AppointmentDTO.changeDeadline` e `noShowAllowedFrom` vêm do servidor: a UI só compara com `useNow()`, não recalcula regra.
+- Componentes compartilhados da agenda em `components/agenda` (`filters.tsx` com `PeriodNavigator`/`ProfessionalFilter`, `timeline.ts`). Conteúdo largo: `main` vai até `max-w-7xl`; a agenda do dia limita a si mesma a `max-w-3xl`.
+- Dinheiro digitado: `parseMoneyInput`/`formatMoneyInput` (`shared/money.ts`). Datas: `startOfWeek`, `localDateTimeToIso`, `isoToLocalDate`, `formatDateTime` (`shared/format.ts`).
+- Telas das fases 6–8 ainda são placeholders em `pages/placeholders.tsx`; cada uma ganha sua pasta quando for construída.
 
 ### LGPD
 
@@ -168,4 +171,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros · 7. Relatórios · 8. Configurações + notificações · 9. Polimento

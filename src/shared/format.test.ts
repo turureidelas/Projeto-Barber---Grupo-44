@@ -7,6 +7,11 @@ import {
   addDaysToLocalDate,
   isLocalDateString,
   initials,
+  startOfWeek,
+  formatWeekdayShort,
+  formatDateTime,
+  localDateTimeToIso,
+  isoToLocalDate,
   toLocalDateString,
 } from './format';
 
@@ -38,6 +43,23 @@ describe('format helpers (pt-BR, São Paulo)', () => {
     expect(isLocalDateString('2026-11-18')).toBe(true);
     expect(isLocalDateString('2026-02-30')).toBe(false);
     expect(isLocalDateString('18/11/2026')).toBe(false);
+  });
+
+  it('finds the Monday of a week', () => {
+    expect(startOfWeek('2026-11-18')).toBe('2026-11-16');
+    expect(startOfWeek('2026-11-16')).toBe('2026-11-16');
+    expect(startOfWeek('2026-11-22')).toBe('2026-11-16');
+  });
+
+  it('formats weekdays and date-times in pt-BR', () => {
+    expect(formatWeekdayShort('2026-11-18')).toBe('qua');
+    expect(formatDateTime('2026-11-18T13:00:00.000Z')).toBe('qua, 18/11 às 10:00');
+  });
+
+  it('converts São Paulo wall-clock times to instants and back', () => {
+    const iso = localDateTimeToIso('2026-11-18', '09:30');
+    expect(new Date(iso).toISOString()).toBe('2026-11-18T12:30:00.000Z');
+    expect(isoToLocalDate('2026-11-19T02:30:00.000Z')).toBe('2026-11-18');
   });
 
   it('builds initials', () => {
