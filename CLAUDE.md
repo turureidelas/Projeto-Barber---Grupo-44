@@ -85,7 +85,8 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - Erros: `DomainError` e `ApplicationError` (`NOT_FOUND`, `NOT_AUTHENTICATED`, `INVALID_CREDENTIALS`, `RESOURCE_INACTIVE`, `ALREADY_EXISTS`); `errorCodeOf(error)` dá o código para a UI traduzir.
 - Mock: `InMemoryDatabase` (linhas JSON em `localStorage`, chave `na-regua:demo-db:v1`, latência artificial de 150 ms) + mappers linha⇄entidade em `infrastructure/mappers` (reaproveitáveis para a API). Sessão em `na-regua:session` (só `userId` + validade).
 - Dados de demonstração gerados por `createDemoSeed(now)` (determinístico; 3 semanas de histórico + hoje + 10 dias à frente, validados pelo motor). Contas (senha `demo123`): `ricardo@novaera.demo` (gestor), `bruno@novaera.demo` e `diego@novaera.demo` (profissionais), `camila@novaera.demo` (recepcionista).
-- Composition root: `src/main/container.ts` (`createContainer`); a UI recebe os casos de uso via `UseCasesProvider` / `useUseCases()`.
+- Composition root: `src/main/container.ts` (`createContainer`); a UI recebe os casos de uso via `UseCasesProvider` / `useUseCases()`. `VITE_USE_MOCKS=true` monta os repositórios in-memory; `false` monta os HTTP.
+- **API (HTTP):** `infrastructure/http/HttpClient.ts` (fetch + `VITE_API_URL` + `Authorization: Bearer`) traduz respostas: `{ code }` conhecido → `RemoteError` (reconhecido por `errorCodeOf`), 401 → `NOT_AUTHENTICATED`, resto/rede → `UNEXPECTED`. Repositórios em `infrastructure/repositories/http` reaproveitam os mappers (mesmas linhas do mock); `HttpAuthGateway` guarda só `userId`, `expiresAt` e `token`. Sem mocks, `useCases.demo` é `null`. Contrato completo em `docs/api.md`; `main/testing/fakeApi.ts` é uma API falsa sobre o seed para testes de ponta a ponta. A API real precisa revalidar permissões e regras.
 - Testes de casos de uso usam `createTestApp()` (`src/main/testing`): app real em memória com fixture pequena e `FixedClock` (quarta 18/11/2026 08:00). Só arquivos `*.test.ts` de `application` podem importar `@main` (exceção no lint).
 
 ### Interface (presentation)
@@ -119,9 +120,14 @@ Todas as entidades têm `barbershopId` (UI v1 opera uma barbearia só, dados já
 - **Avisos (notificações)**: entidade `Notification` (`APPOINTMENT_CANCELLED` | `APPOINTMENT_RESCHEDULED`, horário anterior, novo horário, `readBy` — lido **por pessoa**). Porta `NotificationRepository` (`listRecent`), tabela `notifications` no mock (banco salvo antes dela é atualizado com a tabela vazia, não apagado). Casos de uso `notifications.list` / `markRead` / `markAllRead`; cada pessoa vê os avisos das agendas que pode gerenciar (`canManageAgendaOf`). Sino com contador no cabeçalho (`components/notifications/NotificationBell`, consulta a cada 30 s); aparece no menu lateral e na barra do celular (duas instâncias, o CSS mostra uma).
 - **Ações do cliente**: só os casos de uso "como cliente" geram aviso (`by: 'CLIENT'`, respeitam a antecedência → `LATE_CHANGE_NOT_ALLOWED`); cancelar/remarcar pela equipe não gera aviso. Como o app do cliente ainda não existe, ficam em `demo.simulateClientCancel` / `demo.simulateClientReschedule` (`use-cases/demo/client-simulator.ts`, `null` fora do mock) e a UI é o `ClientSimulator` (mesmo profissional, só horários livres). Remarcar (equipe ou cliente) passa por `services/appointment-changes.ts` (`moveAppointment`). O seed começa com 3 avisos não lidos (cancelamentos de clientes mais próximos).
 
+- **Navegação e desempenho:** cada `PageHeader` dá nome à aba (`<título> · Na Régua`) e o `h1` aceita foco; ao trocar de rota o `AppShell` foca o `h1` da nova tela. Rotas carregadas com `React.lazy` (hoje e login vão no pacote principal; `Suspense` no `AppShell`) e bibliotecas em grupos próprios (`react`, `data`, `dates`) em `vite.config.ts`.
+
 ### LGPD
 
 Coletar só o necessário; mascarar telefone/e-mail em listagens; **nenhum dado pessoal em `console.*` nem em URL** (use IDs); registro de consentimento do cliente (data, versão do termo, canal).
+
+- **Apagar dados do cliente** (`AnonymizeClient`, permissão `clients:anonymize`, só gestor): `Client.anonymize(now)` troca o nome por `ANONYMIZED_CLIENT_NAME` e apaga telefone, e-mail e consentimento (`phone` só pode ser `null` em cliente anonimizado). Histórico fica (relatórios continuam certos); agendamentos futuros são cancelados com motivo; o cliente some da busca, não pode ser agendado (`RESOURCE_INACTIVE`) nem editado. DTOs: `phoneMasked`/`clientPhoneMasked`/`phone` podem ser `null`; `anonymized`/`anonymizedAt`.
+- Na API, telefone/e-mail/texto de busca vão sempre no corpo de `POST`; query string só com IDs, instantes e limites (testado em `main/container.test.ts`). Checklist completo no README.
 
 ## Stack
 
@@ -184,4 +190,4 @@ Uma fase por vez. Ao fim de cada fase: `lint`, `typecheck`, `coverage` (ou `test
 
 ### Fases
 
-0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios ✅ · 8. Configurações + notificações ✅ · 9. Polimento
+0. Setup ✅ · 1. Domínio ✅ · 2. Aplicação + infra mock ✅ · 3. Shell da UI ✅ · 4. Agenda do dia ✅ · 5. Agenda semanal ✅ · 6. Cadastros ✅ · 7. Relatórios ✅ · 8. Configurações + notificações ✅ · 9. Polimento ✅
