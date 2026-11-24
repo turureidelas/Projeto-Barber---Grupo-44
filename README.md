@@ -1,5 +1,3 @@
-# Na Régua — Painel Web
-
 ## Integrantes
 
 | Nome | GitHub |
@@ -11,6 +9,8 @@
 | Gabriela B da Fonseca | [@gabiifonsceca96](https://github.com/gabiifonsceca96) |
 | Thiago Alexandre Ribeiro | [@thiagoalex21](https://github.com/thiagoalex21) |
 
+
+# Na Régua — Painel Web
 
 Painel web responsivo do **Na Régua**, sistema de agendamento para barbearias pequenas e médias (1 a 8 cadeiras),
 com uma **área do cliente** para agendar pelo celular.
