@@ -74,12 +74,12 @@ export class ResourceInactiveError extends ApplicationError {
   }
 }
 
-/** e.g. another client already has this phone number. */
+/** e.g. another client already has this phone number, or an account uses this e-mail. */
 export class AlreadyExistsError extends ApplicationError {
   readonly code = 'ALREADY_EXISTS';
-  readonly field: 'phone';
+  readonly field: 'phone' | 'email';
 
-  constructor(field: 'phone') {
+  constructor(field: 'phone' | 'email') {
     super(`Another record already uses this ${field}.`);
     this.field = field;
   }

@@ -23,6 +23,7 @@ import * as map from '../../../mappers/mappers';
 import { emptySnapshot, type DatabaseSnapshot } from '../InMemoryDatabase';
 import {
   DEMO_ACCOUNTS,
+  DEMO_CLIENT_ID,
   DEMO_CLIENT_NAMES,
   DEMO_PASSWORD,
   DEMO_PROFESSIONALS,
@@ -88,11 +89,12 @@ export function createDemoSeed(now: Date): DatabaseSnapshot {
       email: Email.parse(account.email),
       role: account.role,
       professionalId: account.professionalId === null ? null : toId(account.professionalId),
+      clientId: account.clientId === undefined ? null : toId(account.clientId),
     }),
   );
 
   const services = createServices(shopId);
-  const clients = createClients(random, shopId, now);
+  const clients = withDemoClientAccount(createClients(random, shopId, now));
   const timeBlocks = createTimeBlocks(today, now);
 
   const availability = new AvailabilityService();
@@ -169,10 +171,55 @@ export function createDemoSeed(now: Date): DatabaseSnapshot {
     professionals: professionals.map(map.professionalToRow),
     services: services.map(map.serviceToRow),
     clients: clients.map(map.clientToRow),
-    appointments: appointments.map(map.appointmentToRow),
+    appointments: withDemoClientBookings(appointments, now).map(map.appointmentToRow),
     timeBlocks: timeBlocks.map(map.timeBlockToRow),
     notifications: createNotifications(appointments, now).map(map.notificationToRow),
   };
+}
+
+/** The demo client signed up through the app: their login e-mail and consent channel. */
+function withDemoClientAccount(clients: Client[]): Client[] {
+  const account = DEMO_ACCOUNTS.find((candidate) => candidate.clientId === DEMO_CLIENT_ID);
+  return clients.map((client) =>
+    client.id === DEMO_CLIENT_ID && account
+      ? Client.create({
+          ...client.toProps(),
+          email: Email.parse(account.email),
+          consent: { grantedAt: client.createdAt, termsVersion: '2026.1', channel: 'APP' },
+        })
+      : client,
+  );
+}
+
+/**
+ * So the client area has something to show: the demo client gets one completed visit in each
+ * of the last three weeks and one upcoming booking (a few days ahead, inside the notice period).
+ */
+const DEMO_CLIENT_WINDOWS: readonly (readonly [fromDay: number, toDay: number, past: boolean])[] = [
+  [-21, -17, true],
+  [-14, -10, true],
+  [-7, -3, true],
+  [2, 5, false],
+];
+
+function withDemoClientBookings(appointments: readonly Appointment[], now: Date): Appointment[] {
+  const picked = new Set<string>();
+  for (const [fromDay, toDay, past] of DEMO_CLIENT_WINDOWS) {
+    const from = now.getTime() + fromDay * DAY;
+    const to = now.getTime() + toDay * DAY;
+    const match = appointments.find(
+      (appointment) =>
+        appointment.start.getTime() >= from &&
+        appointment.start.getTime() < to &&
+        (past ? appointment.status === 'COMPLETED' : appointment.status === 'SCHEDULED'),
+    );
+    if (match) picked.add(match.id);
+  }
+  return appointments.map((appointment) =>
+    picked.has(appointment.id)
+      ? Appointment.restore({ ...appointment.toProps(), clientId: toId(DEMO_CLIENT_ID) })
+      : appointment,
+  );
 }
 
 const SEEDED_NOTIFICATIONS = 3;

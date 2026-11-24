@@ -16,6 +16,7 @@ import type {
   ServiceDTO,
   SessionUserDTO,
 } from '../dto/catalog';
+import type { ClientProfileDTO, MyAppointmentsDTO } from '../dto/client-area';
 import type { NotificationListDTO } from '../dto/notifications';
 import type { ReportDTO } from '../dto/reports';
 import {
@@ -60,6 +61,23 @@ import {
   type CreateClientInput,
   type UpdateClientInput,
 } from './catalog/client-management';
+import {
+  GetMyProfile,
+  ListBarbershops,
+  SignUpClient,
+  type SignUpClientInput,
+} from './client/client-account';
+import {
+  BookMyAppointment,
+  CancelMyAppointment,
+  GetMyAppointments,
+  ListClientSlots,
+  RescheduleMyAppointment,
+  type BookMyAppointmentInput,
+  type ClientSlotsInput,
+  type MyAppointmentInput,
+  type RescheduleMyAppointmentInput,
+} from './client/client-bookings';
 import {
   CreateProfessional,
   GetProfessional,
@@ -149,6 +167,19 @@ export interface UseCases {
     readonly updateBarbershop: UseCase<UpdateBarbershopInput, BarbershopDTO>;
     readonly updateCancellationPolicy: UseCase<UpdateCancellationPolicyInput, BarbershopDTO>;
   };
+  /** The client area (role CLIENT): only the signed-in client's own data. */
+  readonly client: {
+    /** Public: no session needed. */
+    readonly listBarbershops: UseCase<void, BarbershopDTO[]>;
+    /** Public: creates the account and signs in. */
+    readonly signUp: UseCase<SignUpClientInput, SessionUserDTO>;
+    readonly getProfile: UseCase<void, ClientProfileDTO>;
+    readonly getMyAppointments: UseCase<void, MyAppointmentsDTO>;
+    readonly listSlots: UseCase<ClientSlotsInput, SlotDTO[]>;
+    readonly book: UseCase<BookMyAppointmentInput, AppointmentDTO>;
+    readonly cancel: UseCase<MyAppointmentInput, AppointmentDTO>;
+    readonly reschedule: UseCase<RescheduleMyAppointmentInput, AppointmentDTO>;
+  };
   readonly notifications: {
     readonly list: UseCase<void, NotificationListDTO>;
     readonly markRead: UseCase<{ notificationId: string }, void>;
@@ -158,7 +189,7 @@ export interface UseCases {
   readonly demo: {
     readonly resetDemoData: UseCase<void, void>;
     readonly listAccounts: UseCase<void, DemoAccount[]>;
-    /** Stand-ins for the client app (not built yet): they leave a notice in the panel. */
+    /** Staff shortcut: act as the client would (leaves a notice in the panel). */
     readonly simulateClientCancel: UseCase<SimulateClientCancelInput, AppointmentDTO>;
     readonly simulateClientReschedule: UseCase<SimulateClientRescheduleInput, AppointmentDTO>;
   } | null;
@@ -210,6 +241,16 @@ export function createUseCases(deps: ApplicationDependencies): UseCases {
       updateBarbershop: new UpdateBarbershop(deps),
       updateCancellationPolicy: new UpdateCancellationPolicy(deps),
     },
+    client: {
+      listBarbershops: new ListBarbershops(deps),
+      signUp: new SignUpClient(deps),
+      getProfile: new GetMyProfile(deps),
+      getMyAppointments: new GetMyAppointments(deps),
+      listSlots: new ListClientSlots(deps),
+      book: new BookMyAppointment(deps),
+      cancel: new CancelMyAppointment(deps),
+      reschedule: new RescheduleMyAppointment(deps),
+    },
     notifications: {
       list: new ListNotifications(deps),
       markRead: new MarkNotificationRead(deps),
@@ -236,6 +277,14 @@ export type { RescheduleAppointmentInput } from './agenda/RescheduleAppointment'
 export type { ScheduleAppointmentInput } from './agenda/ScheduleAppointment';
 export type { BlockTimeInput, UnblockTimeInput } from './agenda/time-block-use-cases';
 export type { SignInInput } from './auth/auth-use-cases';
+export type { SignUpClientInput } from './client/client-account';
+export { MIN_PASSWORD_LENGTH } from './client/client-account';
+export type {
+  BookMyAppointmentInput,
+  ClientSlotsInput,
+  MyAppointmentInput,
+  RescheduleMyAppointmentInput,
+} from './client/client-bookings';
 export type { GetReportInput } from './reports/GetReport';
 export type {
   UpdateBarbershopInput,

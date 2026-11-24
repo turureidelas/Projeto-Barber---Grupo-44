@@ -32,6 +32,18 @@ describe('Notification', () => {
     });
   });
 
+  it('tells that the client booked by themselves', () => {
+    const appointment = anAppointment({ start: at('15:00') });
+    const notification = Notification.clientBooked(appointment, { id, now });
+
+    expect(notification).toMatchObject({
+      kind: 'APPOINTMENT_BOOKED',
+      appointmentId: appointment.id,
+      previousStart: at('15:00'),
+      newStart: null,
+    });
+  });
+
   it('tells where the client moved the appointment', () => {
     const before = anAppointment({ start: at('15:00') });
     const after = before.reschedule({

@@ -68,7 +68,7 @@ describe('InMemoryDatabase', () => {
     db.replaceAll(createDemoSeed(at('10:00')));
     const users = await db.all('users');
     (users as unknown[]).length = 0;
-    expect(await db.all('users')).toHaveLength(4);
+    expect(await db.all('users')).toHaveLength(5);
   });
 
   it('simulates latency when asked to', async () => {

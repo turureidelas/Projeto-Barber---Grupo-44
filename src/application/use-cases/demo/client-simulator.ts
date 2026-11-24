@@ -1,20 +1,17 @@
-import { toId, type NotificationId } from '@domain/entities/ids';
-import { Notification } from '@domain/entities/Notification';
 import { assertCanManageAgendaOf } from '@domain/services/access-control';
 import type { ApplicationDependencies } from '../../dependencies';
 import type { AppointmentDTO } from '../../dto/agenda';
 import { requireActor } from '../../services/actor';
-import { moveAppointment } from '../../services/appointment-changes';
 import { assembleAppointment } from '../../services/assemblers';
+import { cancelByClient, rescheduleByClient } from '../../services/client-changes';
 import { parseInstant } from '../../services/inputs';
 import { requireAppointment, requireBarbershop, requireProfessional } from '../../services/lookups';
 import type { UseCase } from '../UseCase';
 
 /**
- * What the client app will do through the API: cancel or reschedule respecting the policy
- * (out of the notice period → LATE_CHANGE_NOT_ALLOWED), freeing the previous time and leaving
- * a notice in the panel. The client app doesn't exist yet, so in demo mode the panel offers a
- * simulator; whoever simulates must take care of that agenda.
+ * Demo shortcut for staff: does what a client does in the client area (cancel or reschedule
+ * respecting the policy, leaving a notice in the panel) without signing in as the client.
+ * Whoever simulates must take care of that agenda.
  */
 
 type Deps = Pick<
@@ -38,10 +35,8 @@ async function loadChange(deps: Deps, appointmentId: string) {
   const appointment = await requireAppointment(deps, actor, appointmentId);
   assertCanManageAgendaOf(actor, appointment.professionalId);
   const barbershop = await requireBarbershop(deps, actor);
-  return { actor, appointment, barbershop, now: deps.clock.now() };
+  return { actor, appointment, barbershop };
 }
-
-const newNotificationId = (deps: Deps) => toId<NotificationId>(deps.ids.next());
 
 export interface SimulateClientCancelInput {
   readonly appointmentId: string;
@@ -56,17 +51,8 @@ export class SimulateClientCancel implements UseCase<SimulateClientCancelInput, 
   }
 
   async execute(input: SimulateClientCancelInput): Promise<AppointmentDTO> {
-    const { appointment, barbershop, now } = await loadChange(this.deps, input.appointmentId);
-    const cancelled = appointment.cancel({
-      by: 'CLIENT',
-      reason: null,
-      now,
-      policy: barbershop.cancellationPolicy,
-    });
-    await this.deps.appointments.save(cancelled);
-    await this.deps.notifications.save(
-      Notification.clientCancelled(cancelled, { id: newNotificationId(this.deps), now }),
-    );
+    const { appointment, barbershop } = await loadChange(this.deps, input.appointmentId);
+    const cancelled = await cancelByClient(this.deps, appointment, barbershop);
     return assembleAppointment(this.deps, barbershop, cancelled);
   }
 }
@@ -89,22 +75,14 @@ export class SimulateClientReschedule implements UseCase<
   }
 
   async execute(input: SimulateClientRescheduleInput): Promise<AppointmentDTO> {
-    const { actor, appointment, barbershop, now } = await loadChange(
-      this.deps,
-      input.appointmentId,
-    );
+    const { actor, appointment, barbershop } = await loadChange(this.deps, input.appointmentId);
     const professional = await requireProfessional(this.deps, actor, appointment.professionalId);
-    const moved = await moveAppointment(this.deps, {
+    const moved = await rescheduleByClient(this.deps, {
       appointment,
-      target: professional,
+      professional,
+      barbershop,
       start: parseInstant('start', input.start),
-      by: 'CLIENT',
-      now,
-      policy: barbershop.cancellationPolicy,
     });
-    await this.deps.notifications.save(
-      Notification.clientRescheduled(appointment, moved, { id: newNotificationId(this.deps), now }),
-    );
     return assembleAppointment(this.deps, barbershop, moved);
   }
 }

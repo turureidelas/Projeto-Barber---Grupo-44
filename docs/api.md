@@ -7,7 +7,8 @@ A API falsa usada nos testes (`src/main/testing/fakeApi.ts`) implementa as mesma
 ## Regras gerais
 
 - Base: `VITE_API_URL` (ex.: `https://api.naregua.com.br/api`). JSON nos dois sentidos.
-- Autenticação: `Authorization: Bearer <token>` em todas as rotas, exceto `POST /auth/sessions`.
+- Autenticação: `Authorization: Bearer <token>` em todas as rotas, exceto as públicas: `POST /auth/sessions`,
+  `POST /auth/client-accounts` e `GET /barbershops`.
 - **Corpo das mensagens = as mesmas "linhas" do mock** (`src/infrastructure/mappers/rows.ts`): instantes em ISO 8601,
   dinheiro em centavos (inteiro), horários de parede em `"HH:mm"`, telefone só com dígitos.
 - **LGPD:** a query string leva só IDs, instantes e limites. Telefone, e-mail e texto de busca vão sempre no
@@ -31,12 +32,23 @@ Códigos aceitos: os de `DOMAIN_ERROR_CODES` (`src/domain/errors/DomainError.ts`
 
 ### Sessão
 
-| Método   | Rota                     | Corpo                 | Resposta                                    |
-| -------- | ------------------------ | --------------------- | ------------------------------------------- |
-| `POST`   | `/auth/sessions`         | `{ email, password }` | `201 { userId, expiresAt, token }` ou `401` |
-| `DELETE` | `/auth/sessions/current` | —                     | `204`                                       |
+| Método   | Rota                     | Corpo                        | Resposta                                    |
+| -------- | ------------------------ | ---------------------------- | ------------------------------------------- |
+| `POST`   | `/auth/sessions`         | `{ email, password }`        | `201 { userId, expiresAt, token }` ou `401` |
+| `DELETE` | `/auth/sessions/current` | —                            | `204`                                       |
+| `POST`   | `/auth/client-accounts`  | `{ client, user, password }` | `201 { userId, expiresAt, token }`          |
+| `GET`    | `/barbershops`           | —                            | Barbearias onde o cliente pode criar conta  |
 
 O navegador guarda só `userId`, `expiresAt` e `token` (nada de nome, e-mail ou telefone).
+
+**Conta de cliente** (`POST /auth/client-accounts`): `client` e `user` são linhas completas (`ClientRow` com
+consentimento `channel: "APP"`; `UserRow` com `role: "CLIENT"` e `clientId`). A API grava as três coisas juntas,
+guarda a senha com hash e abre a sessão. Telefone já cadastrado na barbearia ou e-mail já usado →
+`409 { "code": "ALREADY_EXISTS", "field": "phone" | "email" }`.
+
+**Perfil `CLIENT`:** não tem nenhuma permissão do painel. A API precisa garantir que ele só leia e altere os próprios
+agendamentos (`appointment.clientId === user.clientId`), só leia o próprio cliente, e que cancelar/remarcar respeite a
+antecedência mínima e gere o aviso (`notifications`) para a equipe.
 
 ### Leitura e gravação por ID
 

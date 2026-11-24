@@ -153,6 +153,29 @@ describe('User', () => {
       InvalidValueError,
     );
   });
+
+  it('links a client account to its client record, and only client accounts', () => {
+    const client = User.create({
+      ...base,
+      role: 'CLIENT',
+      professionalId: null,
+      clientId: ids.client,
+    });
+    expect(client.clientId).toBe(ids.client);
+    expect(client.isClient).toBe(true);
+    expect(User.create({ ...base, role: 'OWNER', professionalId: null }).clientId).toBeNull();
+    expect(User.create({ ...base, role: 'OWNER', professionalId: null }).isClient).toBe(false);
+
+    expect(() => User.create({ ...base, role: 'CLIENT', professionalId: null })).toThrow(
+      /client record/,
+    );
+    expect(() =>
+      User.create({ ...base, role: 'CLIENT', professionalId: ids.bruno, clientId: ids.client }),
+    ).toThrow(/professional profile/);
+    expect(() =>
+      User.create({ ...base, role: 'OWNER', professionalId: null, clientId: ids.client }),
+    ).toThrow(/only client accounts/);
+  });
 });
 
 describe('Barbershop', () => {

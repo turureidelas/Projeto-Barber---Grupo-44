@@ -15,7 +15,12 @@ export interface DemoAccount {
   readonly email: string;
   readonly role: Role;
   readonly professionalId: string | null;
+  /** Client accounts only: the client record they book as. */
+  readonly clientId?: string;
 }
+
+/** The demo client account books as the first demo client, "João Pedro Silva". */
+export const DEMO_CLIENT_ID = 'client-001';
 
 export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
   {
@@ -45,6 +50,14 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     email: 'camila@novaera.demo',
     role: 'RECEPTIONIST',
     professionalId: null,
+  },
+  {
+    userId: 'user-joao',
+    name: 'João Pedro Silva',
+    email: 'joao@cliente.demo',
+    role: 'CLIENT',
+    professionalId: null,
+    clientId: DEMO_CLIENT_ID,
   },
 ];
 

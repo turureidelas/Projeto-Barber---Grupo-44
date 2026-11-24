@@ -1,11 +1,9 @@
-import { toId, type AppointmentId } from '@domain/entities/ids';
 import { assertCanManageAgendaOf } from '@domain/services/access-control';
-import { LocalDate } from '@domain/value-objects/LocalDate';
+import type { TimeRange } from '@domain/value-objects/TimeRange';
 import type { ApplicationDependencies } from '../../dependencies';
 import type { SlotDTO } from '../../dto/agenda';
 import { requireActor } from '../../services/actor';
-import { loadProfessionalAgenda } from '../../services/agenda-loader';
-import { dayRange } from '../../services/inputs';
+import { findAvailableSlots } from '../../services/booking';
 import { requireProfessional, requireService } from '../../services/lookups';
 import type { UseCase } from '../UseCase';
 
@@ -43,18 +41,16 @@ export class ListAvailableSlots implements UseCase<ListAvailableSlotsInput, Slot
     const professional = await requireProfessional(this.deps, actor, input.professionalId);
     assertCanManageAgendaOf(actor, professional.id);
     const service = await requireService(this.deps, actor, input.serviceId);
-    if (!professional.active || !service.active) {
-      return [];
-    }
-
-    const date = LocalDate.parse(input.date);
-    const agenda = await loadProfessionalAgenda(this.deps, professional, dayRange(date));
-    const slots = this.deps.availability.listAvailableSlots(agenda, date, service.duration, {
-      now: this.deps.clock.now(),
-      ...(input.ignoreAppointmentId && {
-        ignoreAppointmentId: toId<AppointmentId>(input.ignoreAppointmentId),
-      }),
+    const slots = await findAvailableSlots(this.deps, {
+      professional,
+      service,
+      date: input.date,
+      ignoreAppointmentId: input.ignoreAppointmentId,
     });
-    return slots.map((slot) => ({ start: slot.start.toISOString(), end: slot.end.toISOString() }));
+    return slots.map(toSlotDTO);
   }
+}
+
+export function toSlotDTO(slot: TimeRange): SlotDTO {
+  return { start: slot.start.toISOString(), end: slot.end.toISOString() };
 }

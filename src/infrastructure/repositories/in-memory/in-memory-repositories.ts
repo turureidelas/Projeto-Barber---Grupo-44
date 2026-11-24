@@ -47,6 +47,10 @@ export class InMemoryBarbershopRepository implements BarbershopRepository {
     return this.table.findById(id);
   }
 
+  listAll(): Promise<Barbershop[]> {
+    return this.table.where(() => true);
+  }
+
   save(barbershop: Barbershop): Promise<void> {
     return this.table.save(barbershop);
   }

@@ -10,7 +10,11 @@ import type {
   UserId,
 } from './ids';
 
-export const NOTIFICATION_KINDS = ['APPOINTMENT_CANCELLED', 'APPOINTMENT_RESCHEDULED'] as const;
+export const NOTIFICATION_KINDS = [
+  'APPOINTMENT_BOOKED',
+  'APPOINTMENT_CANCELLED',
+  'APPOINTMENT_RESCHEDULED',
+] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 export interface NotificationProps {
@@ -22,7 +26,7 @@ export interface NotificationProps {
   readonly professionalId: ProfessionalId;
   readonly clientId: ClientId;
   readonly serviceId: ServiceId;
-  /** Start before the change — that time is free again. */
+  /** Start before the change — that time is free again. For a new booking: the booked start. */
   readonly previousStart: Date;
   /** New start when rescheduled; null when cancelled. */
   readonly newStart: Date | null;
@@ -37,7 +41,7 @@ interface ChangeInput {
 }
 
 /**
- * A notice in the panel ("aviso"): the client cancelled or rescheduled through the app.
+ * A notice in the panel ("aviso"): the client booked, cancelled or rescheduled through the app.
  * Immutable, like every entity.
  */
 export class Notification {
@@ -65,6 +69,16 @@ export class Notification {
     this.newStart = props.newStart;
     this.createdAt = props.createdAt;
     this.readBy = props.readBy;
+  }
+
+  /** The client booked `appointment` by themselves. */
+  static clientBooked(appointment: Appointment, input: ChangeInput): Notification {
+    return Notification.restore({
+      ...fromAppointment(appointment, input),
+      kind: 'APPOINTMENT_BOOKED',
+      previousStart: appointment.start,
+      newStart: null,
+    });
   }
 
   /** The client cancelled `appointment` (already cancelled). */

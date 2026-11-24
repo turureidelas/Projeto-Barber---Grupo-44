@@ -1,4 +1,4 @@
-import { hasPermission } from '@domain/services/access-control';
+import { assertStaff, hasPermission } from '@domain/services/access-control';
 import type { ApplicationDependencies } from '../../dependencies';
 import type {
   BarbershopDTO,
@@ -77,7 +77,7 @@ const MAX_LIMIT = 50;
 
 type ClientsDeps = Pick<ApplicationDependencies, 'auth' | 'users' | 'clock' | 'clients'>;
 
-/** Client picker / search. Contact data is masked (LGPD). */
+/** Client picker / search (staff only). Contact data is masked (LGPD). */
 export class SearchClients implements UseCase<SearchClientsInput, ClientSummaryDTO[]> {
   private readonly deps: ClientsDeps;
 
@@ -87,6 +87,7 @@ export class SearchClients implements UseCase<SearchClientsInput, ClientSummaryD
 
   async execute(input: SearchClientsInput): Promise<ClientSummaryDTO[]> {
     const actor = await requireActor(this.deps);
+    assertStaff(actor);
     const limit = Math.min(Math.max(1, Math.trunc(input.limit ?? DEFAULT_LIMIT)), MAX_LIMIT);
     const clients = await this.deps.clients.search(actor.barbershopId, input.query.trim(), limit);
     return clients.map(toClientSummaryDTO);

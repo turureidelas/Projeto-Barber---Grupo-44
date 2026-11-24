@@ -5,7 +5,7 @@ import { ptBR } from '../../i18n/pt-BR';
 const t = ptBR.clients;
 
 /** Brazilian phone with area code (the domain validates it again). */
-function looksLikePhone(value: string): boolean {
+export function looksLikePhone(value: string): boolean {
   let digits = value.replace(/\D/g, '');
   if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) {
     digits = digits.slice(2);

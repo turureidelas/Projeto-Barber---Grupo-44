@@ -48,20 +48,35 @@ export function createFakeApi(snapshot: DatabaseSnapshot, now: () => Date): Fake
     const parts = url.pathname.replace(/^\/api\//, '').split('/');
     const input = (body ?? {}) as Record<string, unknown>;
 
+    const openSession = (userId: string) => {
+      const issued = `token-${userId}`;
+      tokens.add(issued);
+      const expiresAt = new Date(now().getTime() + 12 * 3_600_000).toISOString();
+      return reply(201, { userId, expiresAt, token: issued });
+    };
+
     if (parts[0] === 'auth') {
+      if (method === 'POST' && parts[1] === 'client-accounts') {
+        const account = input as { client: Row; user: Row; password: string };
+        table('clients').push(account.client);
+        table('users').push(account.user);
+        data.credentials.push({ userId: account.user.id, password: account.password });
+        return openSession(account.user.id);
+      }
       if (method === 'POST') {
         const user = table('users').find((row) => row.email === input.email);
         const valid = data.credentials.some(
           (row) => row.userId === user?.id && row.password === input.password,
         );
         if (!user || !valid) return reply(401, { code: 'INVALID_CREDENTIALS' });
-        const issued = `token-${user.id}`;
-        tokens.add(issued);
-        const expiresAt = new Date(now().getTime() + 12 * 3_600_000).toISOString();
-        return reply(201, { userId: user.id, expiresAt, token: issued });
+        return openSession(user.id);
       }
       if (token) tokens.delete(token);
       return reply(204);
+    }
+    // Public: barbershops where a client can sign up.
+    if (method === 'GET' && parts.length === 1 && parts[0] === 'barbershops') {
+      return reply(200, table('barbershops'));
     }
     if (!token || !tokens.has(token)) return reply(401);
 

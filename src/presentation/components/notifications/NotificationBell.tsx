@@ -1,6 +1,6 @@
 import type { NotificationDTO } from '@application/dto/notifications';
 import { formatDateTime } from '@shared/format';
-import { Bell, CalendarClock, CalendarX } from 'lucide-react';
+import { Bell, CalendarClock, CalendarPlus, CalendarX } from 'lucide-react';
 import { useState } from 'react';
 import { useNotificationActions, useNotifications } from '../../hooks/useNotifications';
 import { errorMessage } from '../../i18n/errors';
@@ -109,10 +109,35 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, pending, onMarkRead }: NotificationItemProps) {
-  const cancelled = notification.kind === 'APPOINTMENT_CANCELLED';
-  const Icon = cancelled ? CalendarX : CalendarClock;
-  const { clientName, serviceName, professionalName } = notification;
+  const { kind, clientName, serviceName, professionalName } = notification;
   const professional = professionalName.split(' ')[0] ?? professionalName;
+  const previous = formatDateTime(notification.previousStart);
+  const view = {
+    APPOINTMENT_BOOKED: {
+      Icon: CalendarPlus,
+      tone: 'text-success',
+      title: t.booked(clientName),
+      body: t.bookedBody(serviceName, professional, previous),
+    },
+    APPOINTMENT_CANCELLED: {
+      Icon: CalendarX,
+      tone: 'text-danger',
+      title: t.cancelled(clientName),
+      body: t.cancelledBody(serviceName, professional, previous),
+    },
+    APPOINTMENT_RESCHEDULED: {
+      Icon: CalendarClock,
+      tone: 'text-info',
+      title: t.rescheduled(clientName),
+      body: t.rescheduledBody(
+        serviceName,
+        professional,
+        previous,
+        notification.newStart ? formatDateTime(notification.newStart) : '',
+      ),
+    },
+  }[kind];
+  const { Icon } = view;
 
   return (
     <article
@@ -121,25 +146,13 @@ function NotificationItem({ notification, pending, onMarkRead }: NotificationIte
         notification.read ? 'border-line bg-surface' : 'border-accent/50 bg-accent/5',
       )}
     >
-      <Icon
-        aria-hidden="true"
-        className={cx('mt-0.5 size-6 shrink-0', cancelled ? 'text-danger' : 'text-info')}
-      />
+      <Icon aria-hidden="true" className={cx('mt-0.5 size-6 shrink-0', view.tone)} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 className="font-bold">
-          {cancelled ? t.cancelled(clientName) : t.rescheduled(clientName)}
+          {view.title}
           {!notification.read && <span className="sr-only"> ({t.unread})</span>}
         </h3>
-        <p>
-          {notification.newStart === null
-            ? t.cancelledBody(serviceName, professional, formatDateTime(notification.previousStart))
-            : t.rescheduledBody(
-                serviceName,
-                professional,
-                formatDateTime(notification.previousStart),
-                formatDateTime(notification.newStart),
-              )}
-        </p>
+        <p>{view.body}</p>
         <p className="text-sm text-fg-muted">
           {t.receivedAt(formatDateTime(notification.createdAt))}
         </p>

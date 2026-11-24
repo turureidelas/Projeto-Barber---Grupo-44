@@ -18,6 +18,8 @@ export interface UserRow {
   email: string;
   role: string;
   professionalId: string | null;
+  /** Client accounts only. Optional: rows saved before client accounts existed don't have it. */
+  clientId?: string | null;
 }
 
 export interface WorkDayRow {

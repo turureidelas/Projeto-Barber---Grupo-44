@@ -4,6 +4,7 @@ import { at } from '@domain/testing/builders';
 import { LocalDate } from '@domain/value-objects/LocalDate';
 import * as map from '@infrastructure/mappers/mappers';
 import { describe, expect, it } from 'vitest';
+import { DEMO_CLIENT_ID } from './demo-catalog';
 import { createDemoSeed } from './demo-seed';
 
 /** Generated on Wednesday 2026-11-18 at 10:20 (São Paulo). */
@@ -25,6 +26,7 @@ describe('demo seed (Barbearia Nova Era)', () => {
       'PROFESSIONAL',
       'PROFESSIONAL',
       'RECEPTIONIST',
+      'CLIENT',
     ]);
     expect(professionals.map((pro) => pro.name)).toEqual([
       'Ricardo Almeida',
@@ -36,6 +38,20 @@ describe('demo seed (Barbearia Nova Era)', () => {
     expect(new Set(seed.clients.map((client) => client.phone)).size).toBe(360);
     expect(new Set(seed.clients.map((client) => client.name)).size).toBe(360);
     expect(seed.credentials).toHaveLength(seed.users.length);
+  });
+
+  it('gives the demo client account a few visits and one upcoming booking', () => {
+    const account = seed.users.find((user) => user.role === 'CLIENT');
+    expect(account?.clientId).toBe(DEMO_CLIENT_ID);
+    const client = seed.clients.find((row) => row.id === DEMO_CLIENT_ID);
+    expect(client?.email).toBe(account?.email);
+    expect(client?.consent?.channel).toBe('APP');
+
+    const own = seed.appointments.filter((row) => row.clientId === DEMO_CLIENT_ID);
+    expect(own.filter((row) => row.status === 'COMPLETED').length).toBeGreaterThanOrEqual(3);
+    expect(
+      own.some((row) => row.status === 'SCHEDULED' && Date.parse(row.start) > NOW.getTime()),
+    ).toBe(true);
   });
 
   it('generates a busy but realistic history and agenda', () => {

@@ -1,8 +1,9 @@
-import type { AuthGateway, Session } from '@application/ports/AuthGateway';
+import type { AuthGateway, NewClientAccount, Session } from '@application/ports/AuthGateway';
 import type { Clock } from '@application/ports/Clock';
 import { InvalidCredentialsError } from '@application/errors';
 import { toId } from '@domain/entities/ids';
 import type { Email } from '@domain/value-objects/Email';
+import * as map from '../mappers/mappers';
 import type { InMemoryDatabase } from '../repositories/in-memory/InMemoryDatabase';
 import type { KeyValueStorage } from '../storage/KeyValueStorage';
 
@@ -39,11 +40,22 @@ export class InMemoryAuthGateway implements AuthGateway {
       throw new InvalidCredentialsError();
     }
 
+    return this.openSession(user.id);
+  }
+
+  async signUpClient({ client, user, password }: NewClientAccount): Promise<Session> {
+    await this.db.upsert('clients', map.clientToRow(client));
+    await this.db.upsert('users', map.userToRow(user));
+    await this.db.addCredential({ userId: user.id, password });
+    return this.openSession(user.id);
+  }
+
+  private openSession(userId: string): Session {
     const session: Session = {
-      userId: toId(user.id),
+      userId: toId(userId),
       expiresAt: new Date(this.clock.now().getTime() + SESSION_HOURS * MS_PER_HOUR),
     };
-    const stored: StoredSession = { userId: user.id, expiresAt: session.expiresAt.toISOString() };
+    const stored: StoredSession = { userId, expiresAt: session.expiresAt.toISOString() };
     this.storage.setItem(SESSION_KEY, JSON.stringify(stored));
     return session;
   }

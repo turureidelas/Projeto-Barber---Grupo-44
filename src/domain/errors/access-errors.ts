@@ -3,9 +3,10 @@ import { DomainError } from './DomainError';
 
 export class PermissionDeniedError extends DomainError {
   readonly code = 'PERMISSION_DENIED';
-  readonly permission: Permission;
+  /** 'staff': only people who work at the barbershop; 'client': only client accounts. */
+  readonly permission: Permission | 'staff' | 'client';
 
-  constructor(permission: Permission) {
+  constructor(permission: Permission | 'staff' | 'client') {
     super(`Missing permission: ${permission}.`);
     this.permission = permission;
   }

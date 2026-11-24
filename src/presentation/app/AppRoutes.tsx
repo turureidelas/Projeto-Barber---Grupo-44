@@ -1,7 +1,8 @@
-import { lazy } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router';
-import { RequireAuth, RequirePermission } from '../components/auth/guards';
+import { RequireAuth, RequireClient, RequirePermission } from '../components/auth/guards';
 import { AppShell } from '../components/layout/AppShell';
+import { LoadingState } from '../components/ui/states';
 import { LoginPage } from '../pages/login/LoginPage';
 import { NotFoundPage } from '../pages/system/NotFoundPage';
 import { TodayPage } from '../pages/today/TodayPage';
@@ -38,10 +39,81 @@ const MorePage = lazy(() =>
   import('../pages/more/MorePage').then((m) => ({ default: m.MorePage })),
 );
 
+/* Client area: its own chunks, so the panel never downloads them (and vice versa). */
+const ClientLoginPage = lazy(() =>
+  import('../pages/client/ClientLoginPage').then((m) => ({ default: m.ClientLoginPage })),
+);
+const ClientSignUpPage = lazy(() =>
+  import('../pages/client/ClientSignUpPage').then((m) => ({ default: m.ClientSignUpPage })),
+);
+const ClientShell = lazy(() =>
+  import('../components/client-area/ClientShell').then((m) => ({ default: m.ClientShell })),
+);
+const MyAppointmentsPage = lazy(() =>
+  import('../pages/client/MyAppointmentsPage').then((m) => ({ default: m.MyAppointmentsPage })),
+);
+const BookAppointmentPage = lazy(() =>
+  import('../pages/client/BookAppointmentPage').then((m) => ({
+    default: m.BookAppointmentPage,
+  })),
+);
+const ClientAccountPage = lazy(() =>
+  import('../pages/client/ClientAccountPage').then((m) => ({ default: m.ClientAccountPage })),
+);
+
+/** Lazy screens outside a layout (which has its own Suspense). */
+function Lazy({ children }: { readonly children: ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-dvh">
+          <LoadingState />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+}
+
 export function AppRoutes() {
   return (
     <Routes>
       <Route path={paths.login} element={<LoginPage />} />
+
+      {/* Client area */}
+      <Route
+        path={paths.client.login}
+        element={
+          <Lazy>
+            <ClientLoginPage />
+          </Lazy>
+        }
+      />
+      <Route
+        path={paths.client.signUp}
+        element={
+          <Lazy>
+            <ClientSignUpPage />
+          </Lazy>
+        }
+      />
+      <Route element={<RequireClient />}>
+        <Route
+          element={
+            <Lazy>
+              <ClientShell />
+            </Lazy>
+          }
+        >
+          <Route path={paths.client.home} element={<MyAppointmentsPage />} />
+          <Route path={paths.client.book} element={<BookAppointmentPage />} />
+          <Route path={paths.client.account} element={<ClientAccountPage />} />
+          <Route path={`${paths.client.home}/*`} element={<NotFoundPage />} />
+        </Route>
+      </Route>
+
+      {/* Panel (staff) */}
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<TodayPage />} />

@@ -24,7 +24,7 @@ import { createContainer, type Container } from '../container';
 /**
  * A complete app (real use cases + in-memory adapters) on a small, explicit fixture:
  * Barbearia Nova Era with Ricardo (owner, cuts hair) and Bruno (barber), receptionist Camila,
- * two clients and three services. Clock starts on Wednesday 2026-11-18 08:00 (São Paulo).
+ * two clients (João also has a client account) and three services. Clock starts on Wednesday 2026-11-18 08:00 (São Paulo).
  */
 
 export const PASSWORD = 'secret';
@@ -42,6 +42,7 @@ export const fixture = {
     owner: { id: toId<UserId>('user-ricardo'), email: 'ricardo@novaera.demo' },
     barber: { id: toId<UserId>('user-bruno'), email: 'bruno@novaera.demo' },
     receptionist: { id: toId<UserId>('user-camila'), email: 'camila@novaera.demo' },
+    client: { id: toId<UserId>('user-joao'), email: 'joao@cliente.demo' },
   },
 } as const;
 
@@ -139,6 +140,7 @@ function buildFixture() {
     name: string,
     role: Role,
     professionalId: typeof ids.ricardo | null,
+    clientId: ClientId | null = null,
   ) =>
     User.create({
       id: fixture.users[persona].id,
@@ -147,6 +149,7 @@ function buildFixture() {
       email: Email.parse(fixture.users[persona].email),
       role,
       professionalId,
+      clientId,
     });
 
   const haircut = Service.createSingle({
@@ -194,6 +197,7 @@ function buildFixture() {
     user('owner', 'Ricardo Almeida', 'OWNER', fixture.ricardo),
     user('barber', 'Bruno Santos', 'PROFESSIONAL', fixture.bruno),
     user('receptionist', 'Camila Rocha', 'RECEPTIONIST', null),
+    user('client', 'João Pedro', 'CLIENT', null, fixture.joao),
   ];
 
   return {

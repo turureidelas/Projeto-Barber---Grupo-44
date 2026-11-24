@@ -36,6 +36,7 @@ describe('createContainer (mock mode)', () => {
       'PROFESSIONAL',
       'PROFESSIONAL',
       'RECEPTIONIST',
+      'CLIENT',
     ]);
     expect(accounts?.every((account) => account.password === DEMO_PASSWORD)).toBe(true);
   });

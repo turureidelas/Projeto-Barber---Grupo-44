@@ -178,6 +178,7 @@ export function toSessionUserDTO(user: User): SessionUserDTO {
     role: user.role,
     barbershopId: user.barbershopId,
     professionalId: user.professionalId,
+    clientId: user.clientId,
     permissions: [...permissionsFor(user)],
   };
 }

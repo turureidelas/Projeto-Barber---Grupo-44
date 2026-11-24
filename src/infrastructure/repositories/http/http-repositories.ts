@@ -90,6 +90,11 @@ export class HttpBarbershopRepository implements BarbershopRepository {
     );
   }
 
+  /** Public route: the client area lists barbershops before signing in. */
+  listAll(): Promise<Barbershop[]> {
+    return many(this.http.get<BarbershopRow[]>('/barbershops'), map.barbershopFromRow);
+  }
+
   save(barbershop: Barbershop): Promise<void> {
     return this.http.put(`/barbershops/${id(barbershop.id)}`, map.barbershopToRow(barbershop));
   }

@@ -1,8 +1,9 @@
-import type { AuthGateway, Session } from '@application/ports/AuthGateway';
+import type { AuthGateway, NewClientAccount, Session } from '@application/ports/AuthGateway';
 import { errorCodeOf, InvalidCredentialsError } from '@application/errors';
 import { toId } from '@domain/entities/ids';
 import type { Email } from '@domain/value-objects/Email';
 import type { HttpClient } from '../http/HttpClient';
+import * as map from '../mappers/mappers';
 import type { KeyValueStorage } from '../storage/KeyValueStorage';
 
 const SESSION_KEY = 'na-regua:session';
@@ -57,6 +58,20 @@ export class HttpAuthGateway implements AuthGateway {
       }
       throw error;
     }
+    return this.store(response);
+  }
+
+  /** Public route: creates the client record, the account and the password in one request. */
+  async signUpClient({ client, user, password }: NewClientAccount): Promise<Session> {
+    const response = await this.client().post<SessionResponse>('/auth/client-accounts', {
+      client: map.clientToRow(client),
+      user: map.userToRow(user),
+      password,
+    });
+    return this.store(response);
+  }
+
+  private store(response: SessionResponse): Session {
     const stored: StoredSession = {
       userId: response.userId,
       expiresAt: response.expiresAt,

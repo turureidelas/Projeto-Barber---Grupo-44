@@ -1,13 +1,9 @@
-import { Appointment } from '@domain/entities/Appointment';
-import { toId, type AppointmentId } from '@domain/entities/ids';
 import { assertCanManageAgendaOf } from '@domain/services/access-control';
-import { TimeRange } from '@domain/value-objects/TimeRange';
 import type { ApplicationDependencies } from '../../dependencies';
 import type { AppointmentDTO } from '../../dto/agenda';
-import { ResourceInactiveError } from '../../errors';
 import { requireActor } from '../../services/actor';
-import { loadProfessionalAgenda } from '../../services/agenda-loader';
 import { assembleAppointment } from '../../services/assemblers';
+import { bookAppointment } from '../../services/booking';
 import { parseInstant } from '../../services/inputs';
 import {
   requireBarbershop,
@@ -57,27 +53,13 @@ export class ScheduleAppointment implements UseCase<ScheduleAppointmentInput, Ap
       requireService(this.deps, actor, input.serviceId),
       requireClient(this.deps, actor, input.clientId),
     ]);
-    if (!professional.active) throw new ResourceInactiveError('professional');
-    if (!service.active) throw new ResourceInactiveError('service');
-    if (client.isAnonymized) throw new ResourceInactiveError('client');
-
-    const now = this.deps.clock.now();
-    const slot = TimeRange.startingAt(parseInstant('start', input.start), service.duration);
-    const agenda = await loadProfessionalAgenda(this.deps, professional, slot);
-    this.deps.availability.assertSlotAvailable(agenda, slot, { now });
-
-    const appointment = Appointment.schedule({
-      id: toId<AppointmentId>(this.deps.ids.next()),
-      barbershopId: barbershop.id,
-      professionalId: professional.id,
-      clientId: client.id,
-      serviceId: service.id,
-      start: slot.start,
-      duration: service.duration,
-      price: service.price,
-      createdAt: now,
+    const appointment = await bookAppointment(this.deps, {
+      barbershop,
+      professional,
+      service,
+      client,
+      start: parseInstant('start', input.start),
     });
-    await this.deps.appointments.save(appointment);
     return assembleAppointment(this.deps, barbershop, appointment);
   }
 }

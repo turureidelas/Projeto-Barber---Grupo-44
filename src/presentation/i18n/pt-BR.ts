@@ -40,6 +40,7 @@ export const ptBR = {
     OWNER: 'Gestor',
     PROFESSIONAL: 'Profissional',
     RECEPTIONIST: 'Recepção',
+    CLIENT: 'Cliente',
   } satisfies Record<Role, string>,
 
   status: {
@@ -72,6 +73,7 @@ export const ptBR = {
     demoHint: 'Entre com um toque em um dos perfis de teste:',
     demoSignInAs: (name: string, role: string) => `Entrar como ${name} (${role})`,
     sessionExpired: 'Sua sessão terminou. Entre de novo.',
+    clientAreaLink: 'É cliente? Agende seu horário',
   },
 
   demo: {
@@ -82,6 +84,119 @@ export const ptBR = {
     resetConfirmBody:
       'Tudo o que foi feito na demonstração será apagado e os dados de exemplo voltam ao início.',
     badge: 'Modo demonstração',
+  },
+
+  clientArea: {
+    nav: {
+      label: 'Menu do cliente',
+      home: 'Meus horários',
+      book: 'Agendar',
+      account: 'Minha conta',
+    },
+    login: {
+      subtitle: 'Entre para agendar e acompanhar seus horários.',
+      noAccount: 'Ainda não tem conta?',
+      createAccount: 'Criar conta',
+      staffLink: 'Trabalha na barbearia? Entrar no painel',
+    },
+    signUp: {
+      title: 'Criar conta',
+      subtitle: (shop: string) => `Agende seus horários na ${shop} pelo celular.`,
+      barbershop: 'Barbearia',
+      barbershopRequired: 'Escolha a barbearia.',
+      noBarbershop: 'Nenhuma barbearia disponível agora. Tente mais tarde.',
+      name: 'Seu nome',
+      nameRequired: 'Digite seu nome.',
+      phone: 'Celular com DDD',
+      phoneHint: 'A barbearia usa só para falar com você sobre seus horários.',
+      phoneInvalid: 'Digite o celular com DDD, por exemplo (11) 98765-4321.',
+      email: 'E-mail',
+      emailHint: 'Você usa para entrar.',
+      password: 'Crie uma senha',
+      passwordHint: (min: number) => `Pelo menos ${String(min)} caracteres.`,
+      passwordShort: (min: number) => `A senha precisa ter pelo menos ${String(min)} caracteres.`,
+      consent:
+        'Concordo que a barbearia guarde meu nome, celular e e-mail para cuidar dos meus agendamentos (LGPD).',
+      consentRequired: 'Para criar a conta, você precisa concordar.',
+      privacyNote:
+        'Seus dados não são compartilhados com ninguém. Você pode pedir para apagá-los quando quiser.',
+      submit: 'Criar conta',
+      submitting: 'Criando conta…',
+      phoneTaken:
+        'Esse celular já está cadastrado na barbearia. Fale com a barbearia para liberar seu acesso.',
+      emailTaken: 'Já existe uma conta com esse e-mail. Tente entrar.',
+      haveAccount: 'Já tem conta?',
+      signIn: 'Entrar',
+      welcome: (firstName: string) => `Conta criada. Bem-vindo, ${firstName}!`,
+    },
+    home: {
+      title: 'Meus horários',
+      hello: (firstName: string) => `Olá, ${firstName}`,
+      book: 'Agendar horário',
+      next: 'Seu próximo horário',
+      otherUpcoming: 'Também marcados',
+      history: 'Histórico',
+      emptyTitle: 'Você não tem horário marcado',
+      emptyBody: 'Escolha o serviço, o profissional e um horário livre. Leva menos de um minuto.',
+      noHistory: 'Seus atendimentos aparecem aqui.',
+      withProfessional: (name: string) => `com ${name}`,
+      reschedule: 'Remarcar',
+      cancel: 'Cancelar',
+      actionFor: (action: string, service: string, when: string) =>
+        `${action}: ${service}, ${when}`,
+      changeUntil: (deadline: string) => `Dá para cancelar ou remarcar até ${deadline}.`,
+      tooLate: (phone: string) =>
+        `Passou do prazo para mudar pelo app. Se precisar, ligue para a barbearia: ${phone}.`,
+      cancelTitle: 'Cancelar este horário?',
+      cancelBody: (service: string, when: string) =>
+        `${service}, ${when}. O horário fica livre para outra pessoa.`,
+      cancelConfirm: 'Cancelar horário',
+      keep: 'Manter horário',
+      cancelled: 'Horário cancelado.',
+      rescheduleTitle: 'Remarcar horário',
+      rescheduleDescription: (service: string, professional: string) =>
+        `${service} com ${professional}`,
+      rescheduleDate: 'Novo dia',
+      rescheduleSubmit: 'Remarcar',
+      rescheduled: (when: string) => `Pronto! Remarcado para ${when}.`,
+    },
+    book: {
+      title: 'Agendar horário',
+      subtitle: 'Só aparecem horários livres.',
+      service: '1. Serviço',
+      professional: '2. Profissional',
+      date: '3. Dia',
+      time: '4. Horário',
+      today: 'Hoje',
+      tomorrow: 'Amanhã',
+      serviceDetails: (minutes: number, price: string) => `${formatMinutes(minutes)} · ${price}`,
+      noServices: 'A barbearia ainda não tem serviços para agendar pelo app.',
+      noProfessionals: 'Nenhum profissional atendendo pelo app agora.',
+      summary: (service: string, professional: string, when: string) =>
+        `${service} com ${professional}, ${when}.`,
+      chooseAll: 'Escolha serviço, profissional, dia e horário.',
+      confirm: 'Confirmar agendamento',
+      booked: (when: string) => `Pronto! Horário marcado para ${when}.`,
+    },
+    account: {
+      title: 'Minha conta',
+      myData: 'Meus dados',
+      name: 'Nome',
+      phone: 'Celular',
+      email: 'E-mail',
+      notInformed: 'Não informado',
+      privacy: 'Privacidade (LGPD)',
+      consentGiven: (date: string, version: string) =>
+        `Você autorizou o uso dos seus dados em ${date} (termo ${version}).`,
+      consentMissing: 'Não há autorização registrada.',
+      privacyBody: 'Para corrigir ou apagar seus dados, fale com a barbearia.',
+      barbershop: 'Sua barbearia',
+      call: 'Ligar para a barbearia',
+      policy: (hours: number) =>
+        hours === 0
+          ? 'Você pode cancelar ou remarcar pelo app até o horário marcado.'
+          : `Você pode cancelar ou remarcar pelo app até ${String(hours)}h antes do horário.`,
+    },
   },
 
   today: {
@@ -486,8 +601,11 @@ export const ptBR = {
           ? 'Avisos, 1 não lido'
           : `Avisos, ${String(unread)} não lidos`,
     title: 'Avisos',
-    description: 'Cancelamentos e remarcações feitos pelos clientes no app.',
+    description: 'Agendamentos, cancelamentos e remarcações feitos pelos clientes no app.',
     empty: 'Nenhum aviso por enquanto.',
+    booked: (client: string) => `${client} agendou`,
+    bookedBody: (service: string, professional: string, when: string) =>
+      `${service} com ${professional}, ${when}. Marcado pelo app.`,
     cancelled: (client: string) => `${client} cancelou`,
     rescheduled: (client: string) => `${client} remarcou`,
     cancelledBody: (service: string, professional: string, when: string) =>
@@ -502,7 +620,7 @@ export const ptBR = {
 
   simulator: {
     title: 'Simular ações do cliente',
-    body: 'O app do cliente ainda não existe. Aqui você faz o que o cliente faria nele e vê o aviso chegar no sino.',
+    body: 'Atalho para testar: faça aqui o que o cliente faria na área do cliente e veja o aviso chegar no sino.',
     policy: (hours: number) =>
       `Regra atual: o cliente só pode cancelar ou remarcar até ${String(hours)}h antes.`,
     date: 'Dia',

@@ -29,6 +29,7 @@ describe('authentication', () => {
       role: 'RECEPTIONIST',
       barbershopId: fixture.shop,
       professionalId: null,
+      clientId: null,
       permissions: ['agenda:manage-all', 'clients:manage'],
     });
     await expect(auth().getCurrentUser.execute()).resolves.toEqual(user);

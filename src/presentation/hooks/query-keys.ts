@@ -1,6 +1,9 @@
 /** Every TanStack Query key in one place, so invalidation stays consistent. */
 export const queryKeys = {
   session: ['session'] as const,
+  /** Public list (client sign-up). */
+  barbershops: ['public', 'barbershops'] as const,
+  clientProfile: ['client', 'profile'] as const,
   demoAccounts: ['demo', 'accounts'] as const,
   /** Prefix of every catalog query — invalidate it after any cadastro change. */
   catalog: ['catalog'] as const,
@@ -23,4 +26,8 @@ export const queryKeys = {
   report: (from: string, to: string) => ['agenda', 'report', from, to] as const,
   slots: (professionalId: string, serviceId: string, date: string, ignoreId: string | null) =>
     ['agenda', 'slots', professionalId, serviceId, date, ignoreId ?? 'none'] as const,
+  /** Client area: under the agenda prefix, so any booking change refreshes them. */
+  myAppointments: ['agenda', 'mine'] as const,
+  clientSlots: (professionalId: string, serviceId: string, date: string, ignoreId: string | null) =>
+    ['agenda', 'client-slots', professionalId, serviceId, date, ignoreId ?? 'none'] as const,
 };

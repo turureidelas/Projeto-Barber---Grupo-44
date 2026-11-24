@@ -7,10 +7,12 @@ import {
   assertCanManageAgendaOf,
   assertCanManageTimeBlocksOf,
   assertPermission,
+  assertStaff,
   canManageAgendaOf,
   canManageTimeBlocksOf,
   canViewReportsOf,
   hasPermission,
+  isStaff,
   permissionsFor,
   type Permission,
 } from './access-control';
@@ -18,6 +20,7 @@ import {
 const owner = { role: 'OWNER' as Role, professionalId: ids.ricardo };
 const barber = { role: 'PROFESSIONAL' as Role, professionalId: ids.bruno };
 const receptionist = { role: 'RECEPTIONIST' as Role, professionalId: null };
+const client = { role: 'CLIENT' as Role, professionalId: null };
 
 describe('access control (RBAC)', () => {
   const matrix: [Permission, boolean, boolean, boolean][] = [
@@ -44,6 +47,19 @@ describe('access control (RBAC)', () => {
   it('lists the permissions of each role', () => {
     expect(permissionsFor(owner)).toHaveLength(12);
     expect(permissionsFor(receptionist)).toEqual(['agenda:manage-all', 'clients:manage']);
+  });
+
+  it('gives clients no panel permission and tells them apart from staff', () => {
+    expect(permissionsFor(client)).toEqual([]);
+    expect(canManageAgendaOf(client, ids.ricardo)).toBe(false);
+    expect([owner, barber, receptionist].every(isStaff)).toBe(true);
+    expect(isStaff(client)).toBe(false);
+    expect(() => {
+      assertStaff(client);
+    }).toThrow(PermissionDeniedError);
+    expect(() => {
+      assertStaff(receptionist);
+    }).not.toThrow();
   });
 
   it('throws a typed error when a permission is missing', () => {

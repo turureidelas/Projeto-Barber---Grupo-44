@@ -25,7 +25,25 @@ export const paths = {
   reports: '/relatorios',
   settings: '/configuracoes',
   more: '/mais',
+  /** Client area: clients book and follow their own appointments. */
+  client: {
+    login: '/cliente/entrar',
+    signUp: '/cliente/criar-conta',
+    home: '/cliente',
+    book: '/cliente/agendar',
+    account: '/cliente/conta',
+  },
 } as const;
+
+/** True for "/cliente" and "/cliente/..." (not the staff "/clientes" screen). */
+export function isClientAreaPath(path: string): boolean {
+  return path === paths.client.home || path.startsWith(`${paths.client.home}/`);
+}
+
+/** Where each kind of account lands after signing in. */
+export function homeFor(user: Pick<SessionUserDTO, 'role'>): string {
+  return user.role === 'CLIENT' ? paths.client.home : paths.today;
+}
 
 export interface NavItem {
   readonly to: string;

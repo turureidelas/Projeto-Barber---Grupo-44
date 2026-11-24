@@ -26,6 +26,8 @@ const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   OWNER: PERMISSIONS,
   PROFESSIONAL: ['agenda:manage-own', 'time-blocks:manage-own', 'reports:view-own'],
   RECEPTIONIST: ['agenda:manage-all', 'clients:manage'],
+  /** Clients only book, cancel and reschedule their own appointments (checked by ownership). */
+  CLIENT: [],
 };
 
 export function hasPermission(user: Pick<User, 'role'>, permission: Permission): boolean {
@@ -35,6 +37,17 @@ export function hasPermission(user: Pick<User, 'role'>, permission: Permission):
 /** Everything a user may do — used by the UI to show only what applies. */
 export function permissionsFor(user: Pick<User, 'role'>): readonly Permission[] {
   return ROLE_PERMISSIONS[user.role];
+}
+
+/** Works at the barbershop (any panel profile) — clients are not staff. */
+export function isStaff(user: Pick<User, 'role'>): boolean {
+  return user.role !== 'CLIENT';
+}
+
+export function assertStaff(user: Pick<User, 'role'>): void {
+  if (!isStaff(user)) {
+    throw new PermissionDeniedError('staff');
+  }
 }
 
 export function assertPermission(user: Pick<User, 'role'>, permission: Permission): void {

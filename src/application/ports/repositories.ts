@@ -34,6 +34,8 @@ export interface RangeQuery {
 
 export interface BarbershopRepository {
   findById(id: BarbershopId): Promise<Barbershop | null>;
+  /** Public list (no session needed): where a client can create an account. */
+  listAll(): Promise<Barbershop[]>;
   save(barbershop: Barbershop): Promise<void>;
 }
 

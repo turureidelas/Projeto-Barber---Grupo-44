@@ -10,6 +10,8 @@ export interface SessionUserDTO {
   readonly barbershopId: string;
   /** Set when the user also attends clients (professional or owner who cuts hair). */
   readonly professionalId: string | null;
+  /** Set only for client accounts (role CLIENT): their own client record. */
+  readonly clientId: string | null;
   readonly permissions: readonly Permission[];
 }
 

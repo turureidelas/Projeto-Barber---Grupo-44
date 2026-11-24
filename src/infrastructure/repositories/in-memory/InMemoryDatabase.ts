@@ -32,7 +32,8 @@ export interface DatabaseSnapshot {
 export type TableName = Exclude<keyof DatabaseSnapshot, 'version'>;
 export type RowOf<T extends TableName> = DatabaseSnapshot[T][number];
 
-const SCHEMA_VERSION = 1;
+/** v2: client accounts (users with role CLIENT) — a v1 demo is replaced by a fresh seed. */
+const SCHEMA_VERSION = 2;
 const TABLES: readonly TableName[] = [
   'barbershops',
   'users',
@@ -112,6 +113,15 @@ export class InMemoryDatabase {
     } else {
       rows[index] = row;
     }
+    this.persist();
+  }
+
+  async addCredential(row: CredentialRow): Promise<void> {
+    await this.simulateLatency();
+    this.snapshot.credentials = [
+      ...this.snapshot.credentials.filter((existing) => existing.userId !== row.userId),
+      row,
+    ];
     this.persist();
   }
 

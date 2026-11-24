@@ -7,8 +7,13 @@ import { hasAny, useCurrentUser, useSession } from '../../hooks/useSession';
 import { ForbiddenPage } from '../../pages/system/ForbiddenPage';
 import { ErrorState, LoadingState } from '../ui/states';
 
-/** Layout route: only signed-in users pass; others go to login and come back afterwards. */
-export function RequireAuth() {
+type Area = 'staff' | 'client';
+
+/**
+ * Only signed-in users of `area` pass. Signed-out people go to that area's login and come back
+ * afterwards; someone from the other area is sent to their own home.
+ */
+function RequireArea({ area }: { readonly area: Area }) {
   const session = useSession();
   const location = useLocation();
 
@@ -27,9 +32,27 @@ export function RequireAuth() {
     );
   }
   if (!session.data) {
-    return <Navigate to={paths.login} replace state={{ from: location.pathname }} />;
+    const login = area === 'client' ? paths.client.login : paths.login;
+    return <Navigate to={login} replace state={{ from: location.pathname }} />;
+  }
+  const isClient = session.data.role === 'CLIENT';
+  if (area === 'staff' && isClient) {
+    return <Navigate to={paths.client.home} replace />;
+  }
+  if (area === 'client' && !isClient) {
+    return <Navigate to={paths.today} replace />;
   }
   return <Outlet />;
+}
+
+/** Layout route of the panel (staff). */
+export function RequireAuth() {
+  return <RequireArea area="staff" />;
+}
+
+/** Layout route of the client area. */
+export function RequireClient() {
+  return <RequireArea area="client" />;
 }
 
 interface RequirePermissionProps {

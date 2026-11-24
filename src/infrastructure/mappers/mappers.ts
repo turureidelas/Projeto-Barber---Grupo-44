@@ -84,6 +84,7 @@ export function userFromRow(row: UserRow): User {
     email: Email.parse(row.email),
     role: oneOf('role', row.role, ROLES),
     professionalId: row.professionalId === null ? null : toId(row.professionalId),
+    clientId: row.clientId == null ? null : toId(row.clientId),
   });
 }
 
@@ -95,6 +96,7 @@ export function userToRow(user: User): UserRow {
     email: user.email.value,
     role: user.role,
     professionalId: user.professionalId,
+    clientId: user.clientId,
   };
 }
 

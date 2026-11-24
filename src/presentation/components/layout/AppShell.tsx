@@ -1,6 +1,6 @@
 import { Ellipsis } from 'lucide-react';
-import { Suspense, useEffect, useRef } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { Suspense } from 'react';
+import { NavLink, Outlet } from 'react-router';
 import { navItemsFor, paths, type NavItem } from '../../app/routes';
 import { useIsDemo } from '../../hooks/useDemo';
 import { useCurrentUser } from '../../hooks/useSession';
@@ -13,8 +13,7 @@ import { LoadingState } from '../ui/states';
 import { cx } from '../ui/cx';
 import { Brand } from './Brand';
 import { SignOutButton } from './SignOutButton';
-
-const MAIN_ID = 'conteudo';
+import { MAIN_ID, useFocusOnNavigation } from './useFocusOnNavigation';
 
 /**
  * Responsive frame: sidebar on wide screens, top bar + bottom navigation on phones
@@ -101,26 +100,6 @@ export function AppShell() {
       </nav>
     </div>
   );
-}
-
-/**
- * After moving to another screen (not on the first load), focus its title, so keyboard and
- * screen reader users start from the new content instead of the menu they clicked.
- */
-function useFocusOnNavigation() {
-  const { pathname } = useLocation();
-  const previous = useRef(pathname);
-
-  useEffect(() => {
-    if (previous.current === pathname) return;
-    previous.current = pathname;
-    const frame = requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>(`#${MAIN_ID} h1`)?.focus();
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, [pathname]);
 }
 
 function SidebarLink({ item }: { readonly item: NavItem }) {
