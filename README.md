@@ -1,3 +1,14 @@
+## Integrantes
+
+| Nome | GitHub |
+| :--- | :--- |
+| Luan Victor Lira Costa | [@turureidelas](https://github.com/turureidelas) |
+| Miguel Melo Pereira | [@ymiguell](https://github.com/ymiguell) |
+| Isaac Nascimento Santos | — |
+| Diego Ferreira Sousa | [@odiegoferreira](https://github.com/odiegoferreira) |
+| Gabriela B da Fonseca | [@gabiifonsceca96](https://github.com/gabiifonsceca96) |
+| Thiago Alexandre Ribeiro | [@thiagoalex21](https://github.com/thiagoalex21) |
+
 # Na Régua — Painel Web
 
 Painel web responsivo do **Na Régua**, sistema de agendamento para barbearias pequenas e médias (1 a 8 cadeiras),
